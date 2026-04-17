@@ -2,11 +2,13 @@ databases:
   - name: needsmesh-db
     databaseName: needsmesh
     user: needsmesh
+    plan: free
 
 services:
   - type: web
     name: needsmesh-web
     env: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn NeedsMesh.wsgi:application"
     envVars:
