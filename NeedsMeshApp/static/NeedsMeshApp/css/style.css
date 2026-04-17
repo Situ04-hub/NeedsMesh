@@ -1,0 +1,429 @@
+:root {
+  --primary: #1a73e8;
+  --primary-hover: #1557b0;
+  --secondary: #34a853;
+  --accent: #f9ab00;
+  --danger: #d93025;
+  --bg-app: #f8f9fa;
+  --bg-sidebar: #121212;
+  --text-main: #3c4043;
+  --text-muted: #70757a;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --sidebar-w: 260px;
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: var(--bg-sidebar);
+  color: white;
+  z-index: 1000;
+  transition: var(--transition);
+  padding: 1.5rem 1rem;
+}
+
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+.main-content {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  transition: var(--transition);
+}
+
+.main-content.expanded {
+  margin-left: 0;
+}
+
+.topbar {
+  height: 70px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-shadow: var(--shadow);
+}
+
+.content-area {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   Glassmorphism & Cards
+   ============================================================ */
+.card-glass {
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: var(--transition);
+}
+
+.card-glass:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
+}
+
+.card-stat {
+  border-left: 5px solid var(--primary);
+}
+
+/* ============================================================
+   Typography & UI Elements
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+}
+
+.sidebar-brand {
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  color: white;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  color: #a0a0a0;
+  text-decoration: none;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  transition: var(--transition);
+}
+
+.sidebar-link i {
+  margin-right: 1rem;
+  font-size: 1.2rem;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebar-link.active {
+  border-right: 4px solid var(--primary);
+}
+
+.topbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+
+.role-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: white;
+  margin-left: 8px;
+  font-weight: 700;
+}
+
+.role-admin { color: var(--danger); }
+.role-field_worker { color: var(--primary); }
+.role-volunteer { color: var(--secondary); }
+
+/* ============================================================
+   Forms & Buttons
+   ============================================================ */
+.form-control, .form-select {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0e0e0;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+}
+
+.btn-primary-custom {
+  background: linear-gradient(135deg, var(--primary), #4285f4);
+  border: none;
+  border-radius: 12px;
+  padding: 0.8rem 2rem;
+  color: white;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+  color: white;
+}
+
+/* ============================================================
+   Specific Widgets
+   ============================================================ */
+.badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--danger);
+  color: white;
+  font-size: 0.65rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.notification-dropdown {
+  width: 300px;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  padding: 0.5rem;
+  z-index: 1050 !important;
+}
+
+.notif-item {
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 4px;
+  transition: var(--transition);
+}
+
+.notif-item:hover {
+  background: #f1f3f4;
+}
+
+/* Auth Pages */
+.auth-logo i {
+  font-size: 3.5rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: url('../img/hero.png') center/cover no-repeat fixed;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.auth-messages {
+  width: 100%;
+  max-width: 450px;
+  z-index: 1000;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 3rem;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-logo i {
+  font-size: 3.5rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.locality-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: white;
+  margin-bottom: 0.75rem;
+  border: 1px solid #eee;
+}
+
+.high-urgency { border-left: 4px solid var(--danger); }
+.med-urgency { border-left: 4px solid var(--accent); }
+
+.urgency-pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: white;
+}
+
+.urgency-10, .urgency-9 { background: #d32f2f; }
+.urgency-8, .urgency-7 { background: #f57c00; }
+.urgency-6, .urgency-5 { background: #fbc02d; }
+.urgency-4, .urgency-3 { background: #7cb342; }
+.urgency-2, .urgency-1 { background: #388e3c; }
+
+/* Progress Utilities */
+.w-33 { width: 33.33% !important; }
+.w-66 { width: 66.66% !important; }
+
+@media (max-width: 991px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.show { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+}
+
+/* ============================================================
+   Status Badges
+   ============================================================ */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-open { background: #fff3cd; color: #856404; }
+.status-assigned { background: #cce5ff; color: #004085; }
+.status-resolved { background: #d4edda; color: #155724; }
+.status-killed { background: #f8d7da; color: #721c24; }
+
+/* ============================================================
+   Glass Card variant
+   ============================================================ */
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+.tiny { font-size: 0.72rem; }
+.tracking-wider { letter-spacing: 0.05em; }
+.border-dashed { border-style: dashed !important; }
+
+.avatar-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.hover-zoom { transition: transform 0.2s ease; }
+.hover-zoom:hover { transform: scale(1.05); }
+
+.hover-bg-light { transition: background 0.2s ease; }
+.hover-bg-light:hover { background: #f8f9fa !important; }
+
+.shadow-hover { transition: box-shadow 0.2s ease; }
+.shadow-hover:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
+
+.transition { transition: var(--transition); }
+
+.role-badge-lg {
+  font-size: 0.8rem;
+  border: 2px solid currentColor;
+  background: white;
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+.animate { animation-duration: 0.5s; animation-fill-mode: both; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fadeIn { animation-name: fadeIn; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fadeInUp { animation-name: fadeInUp; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slideIn { animation-name: slideIn; }
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slideInDown { animation-name: slideInDown; }
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+.bounceIn { animation-name: bounceIn; }
+
+/* ============================================================
+   User Chip Dropdown Overrides
+   ============================================================ */
+.user-chip {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.4rem 1rem;
+  border-radius: 30px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+.user-chip:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}

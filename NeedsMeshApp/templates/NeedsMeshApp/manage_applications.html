@@ -1,0 +1,106 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Pending Applications – NeedsMesh{% endblock %}
+{% block page_title %}Field Worker Applications{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h5 class="fw-bold mb-1"><i class="bi bi-person-check-fill me-2 text-primary"></i>Pending Applications</h5>
+        <p class="text-muted small mb-0">Review and approve field workers who wish to join your organisation.</p>
+      </div>
+      <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fs-6">
+        {{ pending|length }} Pending
+      </span>
+    </div>
+
+    {% if pending %}
+    <div class="row g-4">
+      {% for wp in pending %}
+      <div class="col-md-6">
+        <div class="card-glass border-0 shadow-sm p-4 h-100">
+
+          <!-- Avatar + name -->
+          <div class="d-flex align-items-center mb-3">
+            <div class="me-3" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span class="fw-bold text-white fs-5">{{ wp.full_name|slice:":1"|upper }}</span>
+            </div>
+            <div>
+              <div class="fw-bold">{{ wp.full_name }}</div>
+              <div class="text-muted small">@{{ wp.user.username }}</div>
+            </div>
+            <span class="ms-auto badge" style="background:rgba(245,158,66,.15);color:#d97706;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;">
+              <i class="bi bi-hourglass-split me-1"></i>Pending
+            </span>
+          </div>
+
+          <!-- Details -->
+          <div class="row g-2 mb-4">
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Organisation</div>
+              <div class="small fw-semibold">
+                <i class="bi bi-building text-primary me-1"></i>
+                {{ wp.organisation|default:"—" }}
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Locality</div>
+              <div class="small fw-semibold">
+                <i class="bi bi-pin-map text-primary me-1"></i>
+                {{ wp.locality|default:"—" }}
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Email</div>
+              <div class="small text-truncate">{{ wp.user.email }}</div>
+            </div>
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Applied</div>
+              <div class="small">{{ wp.user.date_joined|date:"d M Y" }}</div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex gap-2">
+            <form method="post" action="{% url 'approve_worker' wp.pk %}" class="flex-grow-1">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success w-100 rounded-pill shadow-sm">
+                <i class="bi bi-check-circle-fill me-1"></i>Approve
+              </button>
+            </form>
+            <form method="post" action="{% url 'reject_worker' wp.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger rounded-pill px-4"
+                      onclick="return confirm('Reject and delete this application? This cannot be undone.')">
+                <i class="bi bi-x-circle me-1"></i>Reject
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="card-glass text-center p-5 border-0 shadow-sm">
+      <div class="mb-4">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#22c55e15,#22c55e30);display:inline-flex;align-items:center;justify-content:center;">
+          <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+        </div>
+      </div>
+      <h5 class="fw-bold mb-2">All Clear!</h5>
+      <p class="text-muted small">There are no pending field worker applications at the moment.</p>
+      <a href="{% url 'dashboard' %}" class="btn btn-primary-custom rounded-pill px-4 mt-2">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Join NeedsMesh{% endblock %}
+
+{% block content_auth %}
+<div class="auth-card animate fadeIn" style="max-width: 520px;">
+  <div class="auth-logo mb-4">
+    <img src="{% static 'NeedsMeshApp/img/logo.png' %}" alt="Logo" height="60" class="mb-3">
+    <h2 class="fw-bold text-primary">Create Mission Profile</h2>
+    <p class="text-muted small">Join the network of change-makers</p>
+  </div>
+
+  <form method="post" novalidate id="register-form">
+    {% csrf_token %}
+
+    <!-- Always visible fields -->
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">CHOOSE IDENTITY</label>
+      {{ form.username|add_class:"form-control" }}
+      {% if form.username.errors %}<div class="text-danger tiny mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">FULL NAME</label>
+      {{ form.full_name|add_class:"form-control" }}
+      {% if form.full_name.errors %}<div class="text-danger tiny mt-1">{{ form.full_name.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">EMAIL ADDRESS</label>
+      {{ form.email|add_class:"form-control" }}
+      {% if form.email.errors %}<div class="text-danger tiny mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-6">
+        <label class="form-label small fw-bold text-muted">PASSWORD</label>
+        {{ form.password1|add_class:"form-control" }}
+        {% if form.password1.errors %}<div class="text-danger tiny mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-bold text-muted">CONFIRM</label>
+        {{ form.password2|add_class:"form-control" }}
+        {% if form.password2.errors %}<div class="text-danger tiny mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <!-- Role selector -->
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">SELECT YOUR MISSION ROLE</label>
+      <select name="role" id="roleSelect" class="form-select">
+        {% for val, label in form.role.field.choices %}
+        <option value="{{ val }}" {% if form.role.value == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if form.role.errors %}<div class="text-danger tiny mt-1">{{ form.role.errors.0 }}</div>{% endif %}
+    </div>
+
+    <!-- ─── SHARED: Locality (shown for field_worker + volunteer) ─── -->
+    <div id="locality-section" style="display:none;" class="mb-3">
+      <label id="locality-label" class="form-label small fw-bold text-muted">
+        <i class="bi bi-pin-map-fill me-1"></i>LOCALITY
+      </label>
+      <select name="locality" class="form-select" id="localitySelect">
+        <option value="">— Select Locality —</option>
+        {% for loc in form.locality.field.queryset %}
+        <option value="{{ loc.pk }}"
+          {% if form.locality.value == loc.pk|stringformat:"s" %}selected{% endif %}>{{ loc }}</option>
+        {% endfor %}
+      </select>
+      {% if form.locality.errors %}<div class="text-danger tiny mt-1">{{ form.locality.errors.0 }}</div>{% endif %}
+    </div>
+
+    <!-- ─── ADMIN ONLY: NGO Name ─── -->
+    <div id="admin-section" style="display:none;" class="mb-3">
+      <label class="form-label small fw-bold text-muted">
+        <i class="bi bi-building me-1"></i>NGO / ORGANISATION NAME *
+      </label>
+      {{ form.organisation_name|add_class:"form-control" }}
+      {% if form.organisation_name.errors %}<div class="text-danger tiny mt-1">{{ form.organisation_name.errors.0 }}</div>{% endif %}
+      <div class="form-text tiny text-muted">You become the primary admin of this NGO.</div>
+    </div>
+
+    <!-- ─── FIELD WORKER ONLY: Choose Organisation ─── -->
+    <div id="organisation-section" style="display:none;" class="mb-3">
+      <label class="form-label small fw-bold text-muted">
+        <i class="bi bi-building me-1"></i>SELECT ORGANISATION TO JOIN *
+      </label>
+      <select name="organisation_choice" class="form-select" id="organisationSelect">
+        <option value="">— Select Organisation —</option>
+        {% for org in form.organisation_choice.field.queryset %}
+        <option value="{{ org.pk }}"
+          {% if form.organisation_choice.value == org.pk|stringformat:"s" %}selected{% endif %}>{{ org }}</option>
+        {% endfor %}
+      </select>
+      {% if form.organisation_choice.errors %}<div class="text-danger tiny mt-1">{{ form.organisation_choice.errors.0 }}</div>{% endif %}
+      <div class="form-text tiny text-muted">
+        <i class="bi bi-info-circle me-1"></i>Your application will be reviewed by the NGO admin before access is granted.
+      </div>
+    </div>
+
+    <!-- ─── VOLUNTEER ONLY: Expertise / Category ─── -->
+    <div id="category-section" style="display:none;" class="mb-3">
+      <label class="form-label small fw-bold text-muted">
+        <i class="bi bi-stars me-1"></i>EXPERTISE AREA *
+      </label>
+      <select name="category" class="form-select" id="categorySelect">
+        <option value="">— Select Expertise —</option>
+        {% for val, label in form.category.field.choices %}
+        {% if val %}
+        <option value="{{ val }}"
+          {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+      {% if form.category.errors %}<div class="text-danger tiny mt-1">{{ form.category.errors.0 }}</div>{% endif %}
+      <div class="form-text tiny text-muted">Select the area that best matches your skills.</div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger py-2 mb-3 small">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2 shadow-sm">
+      <i class="bi bi-person-plus-fill me-2"></i>
+      <span id="submitLabel">Initialize Account</span>
+    </button>
+  </form>
+
+  <div class="text-center mt-4">
+    <p class="text-muted small">Part of a team already?
+      <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">Sign In</a>
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var roleSelect        = document.getElementById('roleSelect');
+  var localitySection   = document.getElementById('locality-section');
+  var localityLabel     = document.getElementById('locality-label');
+  var adminSection      = document.getElementById('admin-section');
+  var orgSection        = document.getElementById('organisation-section');
+  var catSection        = document.getElementById('category-section');
+  var submitLabel       = document.getElementById('submitLabel');
+
+  // Helper: show / hide an element
+  function show(el) { if (el) el.style.display = 'block'; }
+  function hide(el) { if (el) el.style.display = 'none'; }
+
+  function toggleFields() {
+    var role = roleSelect ? roleSelect.value : '';
+
+    // Reset all conditional sections
+    hide(localitySection);
+    hide(adminSection);
+    hide(orgSection);
+    hide(catSection);
+
+    if (role === 'admin') {
+      show(adminSection);
+      if (submitLabel) submitLabel.textContent = 'Create Organisation & Account';
+
+    } else if (role === 'field_worker') {
+      show(localitySection);
+      show(orgSection);
+      if (localityLabel) localityLabel.innerHTML = '<i class="bi bi-pin-map-fill me-1"></i>PRIMARY MISSION LOCALITY *';
+      if (submitLabel) submitLabel.textContent = 'Submit Application';
+
+    } else if (role === 'volunteer') {
+      show(localitySection);
+      show(catSection);
+      if (localityLabel) localityLabel.innerHTML = '<i class="bi bi-pin-map-fill me-1"></i>PREFERRED VOLUNTEER LOCALITY *';
+      if (submitLabel) submitLabel.textContent = 'Join as Volunteer';
+
+    } else {
+      if (submitLabel) submitLabel.textContent = 'Initialize Account';
+    }
+  }
+
+  if (roleSelect) {
+    roleSelect.addEventListener('change', toggleFields);
+  }
+
+  // Run immediately when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', toggleFields);
+  } else {
+    toggleFields();
+  }
+})();
+</script>
+{% endblock %}

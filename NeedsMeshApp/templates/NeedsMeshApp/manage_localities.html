@@ -1,0 +1,104 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Manage Localities – NeedsMesh{% endblock %}
+{% block page_title %}Manage Localities{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Add Locality Form -->
+  <div class="col-lg-5">
+    <div class="card-glass p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-pin-map me-2"></i>Add New Locality</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Locality Name *</label>
+          {{ form.name }}
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold">Latitude</label>
+            {{ form.latitude }}
+            <small class="text-muted">e.g. 19.0760</small>
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold">Longitude</label>
+            {{ form.longitude }}
+            <small class="text-muted">e.g. 72.8777</small>
+          </div>
+        </div>
+        <button type="submit" name="add_locality" class="btn btn-primary-custom w-100">
+          <i class="bi bi-plus-circle me-1"></i>Add Locality
+        </button>
+      </form>
+    </div>
+
+    <!-- CSV Import -->
+    <div class="card-glass p-4 mt-3">
+      <h5 class="fw-bold mb-1"><i class="bi bi-filetype-csv me-2"></i>Import from CSV</h5>
+      <p class="text-muted small mb-3">CSV must have columns: <code>name, latitude, longitude</code></p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ csv_form.csv_file }}
+        <button type="submit" name="upload_csv" class="btn btn-outline-success mt-2 w-100">
+          <i class="bi bi-upload me-1"></i>Import CSV
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Localities List -->
+  <div class="col-lg-7">
+    <div class="card-glass p-3">
+      <h5 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>All Localities ({{ localities.count }})</h5>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Avg Urgency</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for loc in localities %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ loc.name }}</td>
+              <td>{{ loc.latitude|default:"–" }}</td>
+              <td>{{ loc.longitude|default:"–" }}</td>
+              <td>
+                {% if loc.average_urgency > 0 %}
+                <span class="urgency-pill urgency-{{ loc.average_urgency|floatformat:"0" }}">
+                  {{ loc.average_urgency }}
+                </span>
+                {% else %}
+                <span class="text-muted">–</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'delete_locality' loc.pk %}"
+                      onsubmit="return confirm('Delete {{ loc.name }}?')">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">No localities yet. Add one above.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

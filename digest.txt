@@ -1,0 +1,3665 @@
+Directory structure:
+└── NeedsMesh/
+    ├── django-context.txt
+    ├── manage.py
+    ├── requirements.txt
+    ├── .env.example
+    ├── NeedsMesh/
+    │   ├── __init__.py
+    │   ├── asgi.py
+    │   ├── settings.py
+    │   ├── urls.py
+    │   └── wsgi.py
+    └── NeedsMeshApp/
+        ├── __init__.py
+        ├── admin.py
+        ├── apps.py
+        ├── context_processors.py
+        ├── forms.py
+        ├── models.py
+        ├── signals.py
+        ├── tests.py
+        ├── urls.py
+        ├── views.py
+        ├── migrations/
+        │   ├── 0001_initial.py
+        │   ├── 0002_userprofile_category_userprofile_locality_and_more.py
+        │   ├── 0003_remove_userprofile_ngo_name_and_more.py
+        │   ├── 0004_userprofile_is_approved.py
+        │   ├── 0005_problemmessage.py
+        │   └── __init__.py
+        ├── static/
+        │   └── NeedsMeshApp/
+        │       └── css/
+        │           └── style.css
+        ├── templates/
+        │   └── NeedsMeshApp/
+        │       ├── base.html
+        │       ├── dashboard.html
+        │       ├── finalise_event.html
+        │       ├── heatmap.html
+        │       ├── kill_problem.html
+        │       ├── login.html
+        │       ├── manage_applications.html
+        │       ├── manage_localities.html
+        │       ├── manage_users.html
+        │       ├── needs_board.html
+        │       ├── pending_approval.html
+        │       ├── problem_detail.html
+        │       ├── profile.html
+        │       ├── register.html
+        │       ├── resolve_problem.html
+        │       ├── submit_survey.html
+        │       └── partials/
+        │           ├── message_item.html
+        │           ├── needs_list.html
+        │           └── problem_card.html
+        └── templatetags/
+            ├── __init__.py
+            └── custom_filters.py
+
+================================================
+FILE: django-context.txt
+================================================
+[Empty file]
+
+
+================================================
+FILE: manage.py
+================================================
+#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
+import sys
+
+
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'NeedsMesh.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+================================================
+FILE: requirements.txt
+================================================
+Django>=4.2
+django-environ>=0.11.2
+dj-database-url>=2.1.0
+whitenoise>=6.6.0
+openpyxl>=3.1.2
+Pillow>=10.2.0
+psycopg2-binary>=2.9.9
+
+
+
+================================================
+FILE: .env.example
+================================================
+# NeedsMesh Environment Configuration
+# Copy this file to .env and fill in your secrets
+
+# Django Core
+SECRET_KEY=Generating-A-New-Secure-Secret-Key-Is-Recommended
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,*
+
+# Database Connection String
+# For SQLite (default): sqlite:///db.sqlite3
+# For PostgreSQL: postgres://user:password@localhost:5432/dbname
+DATABASE_URL=sqlite:///db.sqlite3
+
+# Email Settings (for production SMTP)
+# EMAIL_URL=smtp://user:password@smtp.gmail.com:587/?tls=True
+
+
+
+================================================
+FILE: NeedsMesh/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: NeedsMesh/asgi.py
+================================================
+"""
+ASGI config for NeedsMesh project.
+
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
+"""
+
+import os
+
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'NeedsMesh.settings')
+
+application = get_asgi_application()
+
+
+
+================================================
+FILE: NeedsMesh/settings.py
+================================================
+"""
+Django settings for NeedsMesh project.
+"""
+
+import os
+from pathlib import Path
+import environ
+import dj_database_url
+
+# Initialize environment variables
+env = environ.Env(
+    DEBUG=(bool, False),
+    SECRET_KEY=(str, 'env-secret-missing-fix-me'),
+    ALLOWED_HOSTS=(list, ['*']),
+)
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Read .env file if it exists
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env('SECRET_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env('DEBUG')
+
+ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+
+# Application definition
+INSTALLED_APPS = [
+    'NeedsMeshApp.apps.NeedsmeshappConfig',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'NeedsMesh.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'NeedsMeshApp.context_processors.notifications_processor',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'NeedsMesh.wsgi.application'
+
+# Database
+# Uses dj-database-url for production flexibility (Postgres/MySQL/etc)
+
+DATABASES = {
+    'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3')
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'Asia/Kolkata'
+USE_I18N = True
+USE_TZ = True
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Whitenoise storage for production static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Authentication redirects
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+# Email â€” console backend for development (replace with SMTP for production)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# For production SMTP:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your@email.com'
+# EMAIL_HOST_PASSWORD = 'your_app_password'
+# DEFAULT_FROM_EMAIL = 'NeedsMesh <noreply@needsmesh.org>'
+
+
+
+================================================
+FILE: NeedsMesh/urls.py
+================================================
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('NeedsMeshApp.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+================================================
+FILE: NeedsMesh/wsgi.py
+================================================
+"""
+WSGI config for NeedsMesh project.
+
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/6.0/howto/deployment/wsgi/
+"""
+
+import os
+
+from django.core.wsgi import get_wsgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'NeedsMesh.settings')
+
+application = get_wsgi_application()
+
+
+
+================================================
+FILE: NeedsMeshApp/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: NeedsMeshApp/admin.py
+================================================
+from django.contrib import admin
+from .models import UserProfile, Locality, CommunityProblem, ProofImage, SurveySubmission, Notification
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['full_name', 'user', 'role', 'completed_tasks', 'has_badge']
+    list_editable = ['role']
+    list_filter = ['role', 'has_badge']
+    search_fields = ['full_name', 'user__email']
+
+
+@admin.register(Locality)
+class LocalityAdmin(admin.ModelAdmin):
+    list_display = ['name', 'latitude', 'longitude', 'average_urgency']
+    search_fields = ['name']
+
+
+@admin.register(CommunityProblem)
+class CommunityProblemAdmin(admin.ModelAdmin):
+    list_display = ['locality', 'category', 'urgency', 'status', 'submitted_by', 'created_at']
+    list_filter = ['status', 'urgency', 'locality']
+    search_fields = ['problem_statement', 'category']
+    filter_horizontal = ['interested_volunteers', 'selected_volunteers', 'proof_images']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(ProofImage)
+class ProofImageAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'image', 'uploaded_at']
+
+
+@admin.register(SurveySubmission)
+class SurveySubmissionAdmin(admin.ModelAdmin):
+    list_display = ['field_worker', 'problem', 'submission_date']
+    list_filter = ['submission_date']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['recipient', 'message', 'is_read', 'created_at']
+    list_filter = ['is_read']
+
+
+
+================================================
+FILE: NeedsMeshApp/apps.py
+================================================
+from django.apps import AppConfig
+
+
+class NeedsmeshappConfig(AppConfig):
+    name = 'NeedsMeshApp'
+
+    def ready(self):
+        import NeedsMeshApp.signals
+
+
+
+================================================
+FILE: NeedsMeshApp/context_processors.py
+================================================
+from .models import Notification
+
+
+def notifications_processor(request):
+    """Inject unread notification count into every template context."""
+    if request.user.is_authenticated:
+        unread = Notification.objects.filter(
+            recipient=request.user, is_read=False
+        )
+        return {
+            'unread_notifications': unread,
+            'unread_count': unread.count(),
+        }
+    return {'unread_notifications': [], 'unread_count': 0}
+
+
+
+================================================
+FILE: NeedsMeshApp/forms.py
+================================================
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from .models import UserProfile, CommunityProblem, Locality, Organisation, CATEGORY_CHOICES, URGENCY_CHOICES, ROLE_CHOICES
+
+
+# ---------------------------------------------------------------------------
+# Registration Form
+# ---------------------------------------------------------------------------
+class RegistrationForm(forms.Form):
+    username = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unique Username (for login)'})
+    )
+    full_name = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email address'})
+    )
+    password1 = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'})
+    )
+    password2 = forms.CharField(
+        label='Confirm Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'})
+    )
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'role-select'})
+    )
+    # Dynamic fields (initially optional)
+    ngo_name = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'NGO Name'})
+    )
+    locality = forms.ModelChoiceField(
+        queryset=Locality.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    category = forms.ChoiceField(
+        choices=[('', 'Select Category')] + CATEGORY_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    # Organization Logic
+    organisation_name = forms.CharField(
+        max_length=200,
+        required=False,
+        label="New Organisation Name",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Hope Foundation'})
+    )
+    organisation_choice = forms.ModelChoiceField(
+        queryset=Organisation.objects.all(),
+        required=False,
+        label="Select Existing Organisation",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data['username'].lower()
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Whisper of this username already exists in our network. Please choose another.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower()
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
+    def clean_organisation_name(self):
+        role = self.cleaned_data.get('role')
+        name = self.cleaned_data.get('organisation_name')
+        if role == 'admin' and name:
+            if Organisation.objects.filter(name=name).exists():
+                raise forms.ValidationError("This Organisation already exists. Please choose a unique name or join an existing one.")
+        return name
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get('password1')
+        p2 = cleaned.get('password2')
+        role = cleaned.get('role')
+
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Passwords do not match.")
+
+        # Role-specific requirements
+        if role == 'admin':
+            if not cleaned.get('organisation_name'):
+                self.add_error('organisation_name', "Please provide a name for your NGO/Organisation.")
+
+        elif role == 'field_worker':
+            if not cleaned.get('organisation_choice'):
+                self.add_error('organisation_choice', "Please select an NGO to join.")
+            if not cleaned.get('locality'):
+                self.add_error('locality', "Please select your primary mission locality.")
+
+        elif role == 'volunteer':
+            if not cleaned.get('category'):
+                self.add_error('category', "Please select your expertise area.")
+            if not cleaned.get('locality'):
+                self.add_error('locality', "Please select your preferred locality.")
+
+        return cleaned
+
+
+# ---------------------------------------------------------------------------
+# Login Form
+# ---------------------------------------------------------------------------
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(
+        label='Username',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter your username', 'autofocus': True})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'})
+    )
+
+
+# ---------------------------------------------------------------------------
+# Profile Edit Form
+# ---------------------------------------------------------------------------
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['full_name', 'resume']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'resume': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Survey / CommunityProblem Submission Form (for Field Workers)
+# ---------------------------------------------------------------------------
+class SurveyForm(forms.ModelForm):
+    # Multi-select category
+    categories = forms.MultipleChoiceField(
+        choices=CATEGORY_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'category-checkbox'}),
+        label='Categories'
+    )
+
+    class Meta:
+        model = CommunityProblem
+        fields = ['locality', 'problem_statement', 'urgency', 'detected_date']
+        widgets = {
+            'locality': forms.Select(attrs={'class': 'form-select'}),
+            'problem_statement': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 4,
+                'placeholder': 'Describe the community problem in detail...'
+            }),
+            'urgency': forms.Select(attrs={'class': 'form-select'}),
+            'detected_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-fill categories from saved comma-sep string
+        if self.instance.pk and self.instance.category:
+            self.fields['categories'].initial = self.instance.get_category_list()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.category = ','.join(self.cleaned_data['categories'])
+        if commit:
+            instance.save()
+        return instance
+
+
+# ---------------------------------------------------------------------------
+# Proof Image Upload Form (handled separately â€” multiple files)
+# ---------------------------------------------------------------------------
+class ProofImageForm(forms.Form):
+    images = forms.ImageField(
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*'
+        }),
+        required=False,
+        label='Proof Images (multiple allowed)'
+    )
+
+
+# ---------------------------------------------------------------------------
+# Finalise Event Form (admin selects volunteers + event date)
+# ---------------------------------------------------------------------------
+class FinaliseEventForm(forms.ModelForm):
+    class Meta:
+        model = CommunityProblem
+        fields = ['selected_volunteers', 'final_event_date']
+        widgets = {
+            'selected_volunteers': forms.CheckboxSelectMultiple(),
+            'final_event_date': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show volunteers who expressed interest
+        if self.instance.pk:
+            self.fields['selected_volunteers'].queryset = self.instance.interested_volunteers.all()
+
+
+# ---------------------------------------------------------------------------
+# Resolve / Kill Form
+# ---------------------------------------------------------------------------
+class SetVolunteersRequiredForm(forms.ModelForm):
+    class Meta:
+        model = CommunityProblem
+        fields = ['volunteers_required']
+        widgets = {
+            'volunteers_required': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+
+class ResolveProblemForm(forms.ModelForm):
+    class Meta:
+        model = CommunityProblem
+        fields = ['before_after', 'total_need', 'community_reaction', 'status']
+        widgets = {
+            'before_after': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'total_need': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'community_reaction': forms.Textarea(attrs={'class': 'form-control', 'rows': 2,
+                                                        'placeholder': 'Reactions, emojis, feedback...'}),
+            'status': forms.Select(
+                choices=[('resolved', 'Resolved'), ('killed', 'Killed')],
+                attrs={'class': 'form-select'}
+            ),
+        }
+
+
+class KillProblemForm(forms.ModelForm):
+    class Meta:
+        model = CommunityProblem
+        fields = ['killed_reason']
+        widgets = {
+            'killed_reason': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 3,
+                'placeholder': 'Reason for killing this task...'
+            }),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Locality Add Form
+# ---------------------------------------------------------------------------
+class LocalityForm(forms.ModelForm):
+    class Meta:
+        model = Locality
+        fields = ['name', 'latitude', 'longitude']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'latitude': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'longitude': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+        }
+
+
+# ---------------------------------------------------------------------------
+# CSV Import Form (for localities/categories)
+# ---------------------------------------------------------------------------
+class CSVImportForm(forms.Form):
+    csv_file = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.csv'}),
+        label='Upload CSV file'
+    )
+
+
+
+================================================
+FILE: NeedsMeshApp/models.py
+================================================
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+
+# ---------------------------------------------------------------------------
+# Role choices
+# ---------------------------------------------------------------------------
+ROLE_CHOICES = [
+    ('admin', 'Organisation Admin'),
+    ('field_worker', 'Field Worker'),
+    ('volunteer', 'Volunteer'),
+]
+
+STATUS_CHOICES = [
+    ('open', 'Open'),
+    ('assigned', 'Assigned'),
+    ('resolved', 'Resolved'),
+    ('killed', 'Killed'),
+]
+
+URGENCY_CHOICES = [(i, str(i)) for i in range(1, 11)]
+
+CATEGORY_CHOICES = [
+    ('food', 'Food & Nutrition'),
+    ('health', 'Health & Medical'),
+    ('education', 'Education'),
+    ('shelter', 'Shelter & Housing'),
+    ('water', 'Water & Sanitation'),
+    ('livelihood', 'Livelihood & Employment'),
+    ('disability', 'Disability Support'),
+    ('elderly', 'Elderly Care'),
+    ('child', 'Child Welfare'),
+    ('environment', 'Environment'),
+    ('disaster', 'Disaster Relief'),
+    ('other', 'Other'),
+]
+
+
+# ---------------------------------------------------------------------------
+# Organisation â€” a group or NGO managing field workers and problems
+# ---------------------------------------------------------------------------
+class Organisation(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    admin_user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='managed_organisation')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+# ---------------------------------------------------------------------------
+# UserProfile â€” extends Django's built-in User with role, full name, resume
+# ---------------------------------------------------------------------------
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=150)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='volunteer')
+    resume = models.FileField(upload_to='resumes/', blank=True, null=True)
+    # Task completion streak data
+    completed_tasks = models.PositiveIntegerField(default=0)
+    has_badge = models.BooleanField(default=False)
+    # Role-specific fields
+    organisation = models.ForeignKey(Organisation, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
+    locality = models.ForeignKey('Locality', on_delete=models.SET_NULL, null=True, blank=True, related_name='profiles')
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, blank=True, null=True, help_text="For Volunteers")
+    is_approved = models.BooleanField(default=True)  # New field for workflow approval
+
+    def __str__(self):
+        return f"{self.full_name} ({self.role})"
+
+    def save(self, *args, **kwargs):
+        # Auto-award badge after 3 completed tasks
+        if self.completed_tasks >= 3:
+            self.has_badge = True
+        super().save(*args, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Locality â€” a named area with latitude/longitude for the heatmap
+# ---------------------------------------------------------------------------
+class Locality(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    latitude = models.FloatField(null=True, blank=True, help_text="For heatmap (decimal degrees)")
+    longitude = models.FloatField(null=True, blank=True, help_text="For heatmap (decimal degrees)")
+
+    class Meta:
+        verbose_name_plural = "Localities"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def average_urgency(self):
+        """Computed urgency score across all open problems in this locality."""
+        problems = self.communityproblems.filter(status='open')
+        if problems.exists():
+            return round(sum(p.urgency for p in problems) / problems.count(), 1)
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# ProofImage â€” multiple images per CommunityProblem
+# ---------------------------------------------------------------------------
+class ProofImage(models.Model):
+    image = models.ImageField(upload_to='proof_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image {self.pk}"
+
+
+# ---------------------------------------------------------------------------
+# CommunityProblem â€” central model
+# ---------------------------------------------------------------------------
+class CommunityProblem(models.Model):
+    submitted_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name='submitted_problems'
+    )
+    locality = models.ForeignKey(
+        Locality, on_delete=models.SET_NULL, null=True, related_name='communityproblems'
+    )
+    # Category stored as comma-separated values (multi-select support)
+    category = models.CharField(max_length=200)
+    problem_statement = models.TextField()
+    urgency = models.IntegerField(choices=URGENCY_CHOICES, default=5)
+    proof_images = models.ManyToManyField(ProofImage, blank=True)
+    detected_date = models.DateField(default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+
+    # Multi-Organisation Hierarchy
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.SET_NULL, null=True, blank=True, related_name='problems'
+    )
+    volunteers_required = models.PositiveIntegerField(default=0, help_text="Set by NGO Admin")
+
+    # After finalisation
+    interested_volunteers = models.ManyToManyField(
+        User, blank=True, related_name='interested_in'
+    )
+    selected_volunteers = models.ManyToManyField(
+        User, blank=True, related_name='selected_for'
+    )
+    final_event_date = models.DateTimeField(null=True, blank=True)
+
+    # Resolution fields
+    before_after = models.TextField(
+        blank=True, help_text="Describe before vs after the intervention"
+    )
+    total_need = models.TextField(blank=True, help_text="Overall community need summary")
+    community_reaction = models.TextField(blank=True, help_text="Community feedback / emoji reactions")
+
+    # Killed flag
+    killed_reason = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-urgency', '-created_at']
+
+    def __str__(self):
+        return f"{self.locality} | {self.category} | Urgency {self.urgency}"
+
+    def get_category_list(self):
+        """Return categories as a Python list."""
+        return [c.strip() for c in self.category.split(',') if c.strip()]
+
+    def get_category_display_list(self):
+        """Return human-readable category labels."""
+        cat_map = dict(CATEGORY_CHOICES)
+        return [cat_map.get(c, c) for c in self.get_category_list()]
+
+    def short_statement(self):
+        """Teaser (first 100 chars) shown on the Needs Board."""
+        return self.problem_statement[:100] + '...' if len(self.problem_statement) > 100 else self.problem_statement
+
+    @property
+    def needs_reminder(self):
+        """True if urgency >= 8 and no volunteer has offered help within 2 days."""
+        if self.urgency >= 8 and not self.interested_volunteers.exists():
+            age = timezone.now() - self.created_at
+            return age.days >= 2
+        return False
+
+    @property
+    def is_finalised(self):
+        return self.status in ('assigned', 'resolved')
+
+
+# ---------------------------------------------------------------------------
+# SurveySubmission â€” audit log of each survey submission
+# ---------------------------------------------------------------------------
+class SurveySubmission(models.Model):
+    field_worker = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='survey_submissions'
+    )
+    problem = models.ForeignKey(
+        CommunityProblem, on_delete=models.CASCADE, related_name='submissions'
+    )
+    submitted_data_json = models.JSONField(default=dict, blank=True)
+    submission_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Survey by {self.field_worker.username} on {self.submission_date:%Y-%m-%d}"
+
+
+# ---------------------------------------------------------------------------
+# Notification â€” in-app dashboard alerts
+# ---------------------------------------------------------------------------
+class Notification(models.Model):
+    recipient = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='notifications'
+    )
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    link = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.recipient.username}: {self.message[:40]}"
+
+# ---------------------------------------------------------------------------
+# ProblemMessage â€” in-app communication for a specific problem
+# ---------------------------------------------------------------------------
+class ProblemMessage(models.Model):
+    problem = models.ForeignKey(CommunityProblem, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+        
+    def __str__(self):
+        return f"Msg by {self.sender.username} on {self.problem.pk}"
+
+
+
+================================================
+FILE: NeedsMeshApp/signals.py
+================================================
+from django.db.models.signals import post_save
+from django.contrib.auth.models import User
+from django.dispatch import receiver
+from .models import UserProfile
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.get_or_create(user=instance, defaults={'full_name': instance.username})
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        UserProfile.objects.create(user=instance, full_name=instance.username)
+
+
+
+================================================
+FILE: NeedsMeshApp/tests.py
+================================================
+from django.test import TestCase
+
+# Create your tests here.
+
+
+
+================================================
+FILE: NeedsMeshApp/urls.py
+================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # Home
+    path('', views.home_view, name='home'),
+
+    # Auth
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
+    # Profile
+    path('profile/', views.profile_view, name='profile'),
+
+    # Dashboard
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+
+    # Notifications
+    path('notifications/<int:pk>/read/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/read-all/', views.mark_all_read, name='mark_all_read'),
+
+    # Survey submission (field worker)
+    path('submit/', views.submit_survey, name='submit_survey'),
+
+    # Community Needs Board
+    path('needs-board/', views.needs_board, name='needs_board'),
+    path('needs-board/<int:pk>/help/', views.offer_help, name='offer_help'),
+
+    # Problem detail
+    path('problems/<int:pk>/', views.problem_detail, name='problem_detail'),
+
+    # Admin actions
+    path('problems/<int:pk>/set-volunteers/', views.set_volunteers_required, name='set_volunteers_required'),
+    path('problems/<int:pk>/finalise/', views.finalise_event, name='finalise_event'),
+    path('problems/<int:pk>/resolve/', views.resolve_problem, name='resolve_problem'),
+    path('problems/<int:pk>/kill/', views.kill_problem, name='kill_problem'),
+    path('problems/<int:pk>/message/', views.post_problem_message, name='post_problem_message'),
+    path('problems/<int:pk>/accept-volunteer/<int:vol_id>/', views.accept_volunteer, name='accept_volunteer'),
+    path('problems/<int:pk>/reject-volunteer/<int:vol_id>/', views.reject_volunteer, name='reject_volunteer'),
+
+    # Heatmap
+    path('heatmap/', views.urgency_heatmap, name='urgency_heatmap'),
+
+    # Excel export
+    path('export/', views.export_excel, name='export_excel'),
+
+    # Locality management
+    path('localities/', views.manage_localities, name='manage_localities'),
+    path('localities/<int:pk>/delete/', views.delete_locality, name='delete_locality'),
+
+    # User / role management
+    path('users/', views.manage_users, name='manage_users'),
+
+    # Field Worker Applications
+    path('manage-applications/', views.manage_applications, name='manage_applications'),
+    path('manage-applications/<int:pk>/approve/', views.approve_worker, name='approve_worker'),
+    path('manage-applications/<int:pk>/reject/', views.reject_worker, name='reject_worker'),
+]
+
+
+
+================================================
+FILE: NeedsMeshApp/views.py
+================================================
+Error reading file with 'cp1252': 'charmap' codec can't decode byte 0x8f in position 13060: character maps to <undefined>
+
+
+================================================
+FILE: NeedsMeshApp/migrations/0001_initial.py
+================================================
+# Generated by Django 5.2.12 on 2026-04-03 10:30
+
+import django.db.models.deletion
+import django.utils.timezone
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Locality',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=100, unique=True)),
+                ('latitude', models.FloatField(blank=True, help_text='For heatmap (decimal degrees)', null=True)),
+                ('longitude', models.FloatField(blank=True, help_text='For heatmap (decimal degrees)', null=True)),
+            ],
+            options={
+                'verbose_name_plural': 'Localities',
+                'ordering': ['name'],
+            },
+        ),
+        migrations.CreateModel(
+            name='ProofImage',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('image', models.ImageField(upload_to='proof_images/')),
+                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Notification',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('message', models.TextField()),
+                ('is_read', models.BooleanField(default=False)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('link', models.CharField(blank=True, max_length=300)),
+                ('recipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'ordering': ['-created_at'],
+            },
+        ),
+        migrations.CreateModel(
+            name='CommunityProblem',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('category', models.CharField(max_length=200)),
+                ('problem_statement', models.TextField()),
+                ('urgency', models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'), (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10')], default=5)),
+                ('detected_date', models.DateField(default=django.utils.timezone.now)),
+                ('status', models.CharField(choices=[('open', 'Open'), ('assigned', 'Assigned'), ('resolved', 'Resolved'), ('killed', 'Killed')], default='open', max_length=20)),
+                ('final_event_date', models.DateTimeField(blank=True, null=True)),
+                ('before_after', models.TextField(blank=True, help_text='Describe before vs after the intervention')),
+                ('total_need', models.TextField(blank=True, help_text='Overall community need summary')),
+                ('community_reaction', models.TextField(blank=True, help_text='Community feedback / emoji reactions')),
+                ('killed_reason', models.TextField(blank=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('interested_volunteers', models.ManyToManyField(blank=True, related_name='interested_in', to=settings.AUTH_USER_MODEL)),
+                ('selected_volunteers', models.ManyToManyField(blank=True, related_name='selected_for', to=settings.AUTH_USER_MODEL)),
+                ('submitted_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='submitted_problems', to=settings.AUTH_USER_MODEL)),
+                ('locality', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='communityproblems', to='NeedsMeshApp.locality')),
+                ('proof_images', models.ManyToManyField(blank=True, to='NeedsMeshApp.proofimage')),
+            ],
+            options={
+                'ordering': ['-urgency', '-created_at'],
+            },
+        ),
+        migrations.CreateModel(
+            name='SurveySubmission',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('submitted_data_json', models.JSONField(blank=True, default=dict)),
+                ('submission_date', models.DateTimeField(auto_now_add=True)),
+                ('field_worker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='survey_submissions', to=settings.AUTH_USER_MODEL)),
+                ('problem', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='NeedsMeshApp.communityproblem')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='UserProfile',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('full_name', models.CharField(max_length=150)),
+                ('role', models.CharField(choices=[('admin', 'Organisation Admin'), ('field_worker', 'Field Worker'), ('volunteer', 'Volunteer')], default='volunteer', max_length=20)),
+                ('resume', models.FileField(blank=True, null=True, upload_to='resumes/')),
+                ('completed_tasks', models.PositiveIntegerField(default=0)),
+                ('has_badge', models.BooleanField(default=False)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+    ]
+
+
+
+================================================
+FILE: NeedsMeshApp/migrations/0002_userprofile_category_userprofile_locality_and_more.py
+================================================
+# Generated by Django 5.2.12 on 2026-04-03 11:11
+
+import django.db.models.deletion
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('NeedsMeshApp', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='userprofile',
+            name='category',
+            field=models.CharField(blank=True, choices=[('food', 'Food & Nutrition'), ('health', 'Health & Medical'), ('education', 'Education'), ('shelter', 'Shelter & Housing'), ('water', 'Water & Sanitation'), ('livelihood', 'Livelihood & Employment'), ('disability', 'Disability Support'), ('elderly', 'Elderly Care'), ('child', 'Child Welfare'), ('environment', 'Environment'), ('disaster', 'Disaster Relief'), ('other', 'Other')], help_text='For Volunteers', max_length=50, null=True),
+        ),
+        migrations.AddField(
+            model_name='userprofile',
+            name='locality',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='profiles', to='NeedsMeshApp.locality'),
+        ),
+        migrations.AddField(
+            model_name='userprofile',
+            name='ngo_name',
+            field=models.CharField(blank=True, help_text='For Field Workers', max_length=200, null=True),
+        ),
+    ]
+
+
+
+================================================
+FILE: NeedsMeshApp/migrations/0003_remove_userprofile_ngo_name_and_more.py
+================================================
+# Generated by Django 5.2.12 on 2026-04-03 12:11
+
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('NeedsMeshApp', '0002_userprofile_category_userprofile_locality_and_more'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.RemoveField(
+            model_name='userprofile',
+            name='ngo_name',
+        ),
+        migrations.AddField(
+            model_name='communityproblem',
+            name='volunteers_required',
+            field=models.PositiveIntegerField(default=0, help_text='Set by NGO Admin'),
+        ),
+        migrations.CreateModel(
+            name='Organisation',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=200, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('admin_user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='managed_organisation', to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+        migrations.AddField(
+            model_name='communityproblem',
+            name='organisation',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='problems', to='NeedsMeshApp.organisation'),
+        ),
+        migrations.AddField(
+            model_name='userprofile',
+            name='organisation',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='members', to='NeedsMeshApp.organisation'),
+        ),
+    ]
+
+
+
+================================================
+FILE: NeedsMeshApp/migrations/0004_userprofile_is_approved.py
+================================================
+# Generated by Django 5.2.12 on 2026-04-07 16:23
+
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('NeedsMeshApp', '0003_remove_userprofile_ngo_name_and_more'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='userprofile',
+            name='is_approved',
+            field=models.BooleanField(default=True),
+        ),
+    ]
+
+
+
+================================================
+FILE: NeedsMeshApp/migrations/0005_problemmessage.py
+================================================
+# Generated by Django 5.2.12 on 2026-04-07 18:55
+
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('NeedsMeshApp', '0004_userprofile_is_approved'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='ProblemMessage',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('content', models.TextField()),
+                ('timestamp', models.DateTimeField(auto_now_add=True)),
+                ('problem', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='NeedsMeshApp.communityproblem')),
+                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'ordering': ['timestamp'],
+            },
+        ),
+    ]
+
+
+
+================================================
+FILE: NeedsMeshApp/migrations/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: NeedsMeshApp/static/NeedsMeshApp/css/style.css
+================================================
+:root {
+  --primary: #1a73e8;
+  --primary-hover: #1557b0;
+  --secondary: #34a853;
+  --accent: #f9ab00;
+  --danger: #d93025;
+  --bg-app: #f8f9fa;
+  --bg-sidebar: #121212;
+  --text-main: #3c4043;
+  --text-muted: #70757a;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --sidebar-w: 260px;
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: var(--bg-sidebar);
+  color: white;
+  z-index: 1000;
+  transition: var(--transition);
+  padding: 1.5rem 1rem;
+}
+
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+.main-content {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  transition: var(--transition);
+}
+
+.main-content.expanded {
+  margin-left: 0;
+}
+
+.topbar {
+  height: 70px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-shadow: var(--shadow);
+}
+
+.content-area {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   Glassmorphism & Cards
+   ============================================================ */
+.card-glass {
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: var(--transition);
+}
+
+.card-glass:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
+}
+
+.card-stat {
+  border-left: 5px solid var(--primary);
+}
+
+/* ============================================================
+   Typography & UI Elements
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+}
+
+.sidebar-brand {
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  color: white;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  color: #a0a0a0;
+  text-decoration: none;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  transition: var(--transition);
+}
+
+.sidebar-link i {
+  margin-right: 1rem;
+  font-size: 1.2rem;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebar-link.active {
+  border-right: 4px solid var(--primary);
+}
+
+.topbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.user-chip {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.4rem 1rem;
+  border-radius: 30px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.role-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: white;
+  margin-left: 8px;
+  font-weight: 700;
+}
+
+.role-admin { color: var(--danger); }
+.role-field_worker { color: var(--primary); }
+.role-volunteer { color: var(--secondary); }
+
+/* ============================================================
+   Forms & Buttons
+   ============================================================ */
+.form-control, .form-select {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0e0e0;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+}
+
+.btn-primary-custom {
+  background: linear-gradient(135deg, var(--primary), #4285f4);
+  border: none;
+  border-radius: 12px;
+  padding: 0.8rem 2rem;
+  color: white;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+  color: white;
+}
+
+/* ============================================================
+   Specific Widgets
+   ============================================================ */
+.badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--danger);
+  color: white;
+  font-size: 0.65rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.notification-dropdown {
+  width: 300px;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  padding: 0.5rem;
+  z-index: 1050 !important;
+}
+
+.notif-item {
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 4px;
+  transition: var(--transition);
+}
+
+.notif-item:hover {
+  background: #f1f3f4;
+}
+
+/* Auth Pages */
+.auth-logo i {
+  font-size: 3.5rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: url('../img/hero.png') center/cover no-repeat fixed;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.auth-messages {
+  width: 100%;
+  max-width: 450px;
+  z-index: 1000;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 3rem;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-logo i {
+  font-size: 3.5rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.locality-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: white;
+  margin-bottom: 0.75rem;
+  border: 1px solid #eee;
+}
+
+.high-urgency { border-left: 4px solid var(--danger); }
+.med-urgency { border-left: 4px solid var(--accent); }
+
+.urgency-pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: white;
+}
+
+.urgency-10, .urgency-9 { background: #d32f2f; }
+.urgency-8, .urgency-7 { background: #f57c00; }
+.urgency-6, .urgency-5 { background: #fbc02d; }
+.urgency-4, .urgency-3 { background: #7cb342; }
+.urgency-2, .urgency-1 { background: #388e3c; }
+
+/* Progress Utilities */
+.w-33 { width: 33.33% !important; }
+.w-66 { width: 66.66% !important; }
+
+@media (max-width: 991px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.show { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/base.html
+================================================
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}NeedsMesh{% endblock %}</title>
+  <meta name="description" content="Smart Resource Allocation â€“ Data-Driven Volunteer Coordination for Social Impact" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'NeedsMeshApp/css/style.css' %}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+<!-- ===================== SIDEBAR ===================== -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="{% static 'NeedsMeshApp/img/logo.png' %}" alt="Logo" height="40" class="me-2">
+    <span>NeedsMesh</span>
+  </div>
+
+  <nav class="sidebar-nav mt-3">
+    <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-grid-3x3-gap-fill"></i> Dashboard
+    </a>
+
+    {% if user.profile.role == 'field_worker' %}
+    <a href="{% url 'submit_survey' %}" class="sidebar-link {% if request.resolver_match.url_name == 'submit_survey' %}active{% endif %}">
+      <i class="bi bi-file-earmark-plus-fill"></i> Submit Survey
+    </a>
+    {% endif %}
+
+    {% if user.profile.role == 'volunteer' or user.profile.role == 'admin' %}
+    <a href="{% url 'needs_board' %}" class="sidebar-link {% if request.resolver_match.url_name == 'needs_board' %}active{% endif %}">
+      <i class="bi bi-clipboard-pulse"></i> Needs Board
+    </a>
+    {% endif %}
+
+    {% if user.profile.role == 'admin' or user.profile.role == 'field_worker' %}
+    <a href="{% url 'urgency_heatmap' %}" class="sidebar-link {% if request.resolver_match.url_name == 'urgency_heatmap' %}active{% endif %}">
+      <i class="bi bi-geo-alt-fill"></i> Urgency Heatmap
+    </a>
+    {% endif %}
+
+    {% if user.profile.role == 'admin' %}
+    <div class="sidebar-section px-3 text-white small text-uppercase fw-bold mt-4 mb-2" style="letter-spacing: 1px;">Administration</div>
+    <a href="{% url 'manage_users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage_users' %}active{% endif %}">
+      <i class="bi bi-people-fill"></i> User Management
+    </a>
+    <a href="{% url 'manage_applications' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage_applications' %}active{% endif %} d-flex align-items-center justify-content-between">
+      <span><i class="bi bi-person-check-fill"></i> Applications</span>
+      {% if pending_count > 0 %}
+      <span class="badge bg-warning text-dark rounded-pill" style="font-size:10px;">{{ pending_count }}</span>
+      {% endif %}
+    </a>
+    <a href="{% url 'manage_localities' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage_localities' %}active{% endif %}">
+      <i class="bi bi-pin-map-fill"></i> Localities
+    </a>
+    <a href="{% url 'export_excel' %}" class="sidebar-link">
+      <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
+    </a>
+    <a href="/admin/" class="sidebar-link">
+      <i class="bi bi-gear-fill"></i> Django Admin
+    </a>
+    {% endif %}
+
+    <div class="sidebar-divider my-2 border-top border-secondary"></div>
+    <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+      <i class="bi bi-person-badge-fill"></i> My Profile
+    </a>
+    <a href="{% url 'logout' %}" class="sidebar-link text-danger">
+      <i class="bi bi-box-arrow-right"></i> Log Out
+    </a>
+  </nav>
+</div>
+
+<!-- ===================== MAIN CONTENT ===================== -->
+<div class="main-content" id="main-content">
+  <!-- Top Navbar -->
+  <header class="topbar">
+    <div class="d-flex align-items-center">
+      <button class="btn btn-link text-white p-0 me-3" id="sidebarToggle">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    
+    <div class="topbar-right d-flex align-items-center">
+      <!-- Notifications Bell -->
+      <div class="dropdown me-3">
+        <button class="btn btn-link text-white p-0 position-relative" data-bs-toggle="dropdown" id="notif-bell">
+          <i class="bi bi-bell-fill fs-5"></i>
+          {% if unread_count > 0 %}
+          <span class="badge-dot shadow-sm">{{ unread_count }}</span>
+          {% endif %}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown animate slideIn">
+          <li><h6 class="dropdown-header">Latest Updates</h6></li>
+          {% for n in unread_notifications|slice:":5" %}
+          <li>
+            <a class="dropdown-item notif-item text-wrap" 
+               href="{% url 'mark_notification_read' n.pk %}">
+              <div class="d-flex flex-column">
+                <span class="fw-medium small lh-sm">{{ n.message }}</span>
+                <span class="text-muted tiny mt-2"><i class="bi bi-clock me-1"></i>{{ n.created_at|timesince }} ago</span>
+              </div>
+            </a>
+          </li>
+          {% empty %}
+          <li><span class="dropdown-item text-muted small">No new notifications</span></li>
+          {% endfor %}
+          {% if unread_count > 0 %}
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-center small text-primary fw-bold" href="{% url 'mark_all_read' %}">Mark all as read</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <!-- User chip -->
+      <div class="user-chip shadow-sm">
+        <i class="bi bi-person-circle me-2"></i>
+        <span>{{ user.profile.full_name|truncatechars:18 }}</span>
+        <span class="role-badge role-{{ user.profile.role }}">{{ user.profile.get_role_display }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Messages / Alerts -->
+  <div class="content-area">
+    {% if messages %}
+    <div class="messages-container">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show alert-custom shadow-sm" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+<!-- Unauthenticated: full-page layout -->
+<div class="auth-wrapper">
+  {% if messages %}
+  <div class="auth-messages container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-lg" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block content_auth %}{% endblock %}
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- HTMX -->
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script>
+  // Add CSRF token to HTMX requests
+  document.body.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+  });
+
+  // Sidebar toggle
+  document.getElementById('sidebarToggle')?.addEventListener('click', function () {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main-content').classList.toggle('expanded');
+  });
+  // Auto-dismiss alerts after 4s
+  setTimeout(() => {
+    document.querySelectorAll('.alert-custom').forEach(el => {
+      const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+      bsAlert.close();
+    });
+  }, 4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/dashboard.html
+================================================
+Error reading file with 'cp1252': 'charmap' codec can't decode byte 0x8f in position 5036: character maps to <undefined>
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/finalise_event.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Finalise Event â€“ NeedsMesh{% endblock %}
+{% block page_title %}Finalise Event{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+<div class="card-glass p-4">
+
+  <h5 class="fw-bold mb-1"><i class="bi bi-calendar-event me-2"></i>Finalise Event</h5>
+  <p class="text-muted small mb-4">
+    Problem: <strong>{{ problem.locality }}</strong> Â· Urgency {{ problem.urgency }}/10
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Select Volunteers -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Select Volunteers from Interested List</label>
+      {% if problem.interested_volunteers.exists %}
+      <div class="volunteer-checklist">
+        {% for vol in problem.interested_volunteers.all %}
+        <label class="vol-check-item">
+          <input type="checkbox" name="selected_volunteers" value="{{ vol.pk }}" />
+          <div class="vol-info">
+            <div class="avatar-sm">{{ vol.profile.full_name|first|upper }}</div>
+            <div>
+              <span class="fw-semibold">{{ vol.profile.full_name }}</span>
+              <br><small class="text-muted">{{ vol.email }}</small>
+            </div>
+            {% if vol.profile.has_badge %}
+            <span class="ms-auto badge bg-warning text-dark"><i class="bi bi-trophy-fill me-1"></i>Champion</span>
+            {% endif %}
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="alert alert-warning py-2 small">
+        <i class="bi bi-exclamation-triangle me-1"></i>No volunteers have offered help yet.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Event Date Calendar Picker -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Event Date &amp; Time *</label>
+      <input
+        type="datetime-local"
+        name="final_event_date"
+        class="form-control"
+        {% if problem.final_event_date %}value="{{ problem.final_event_date|date:'Y-m-d\TH:i' }}"{% endif %}
+        required
+      />
+      <small class="text-muted">Select the date and time volunteers should gather.</small>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary-custom px-4">
+        <i class="bi bi-check-circle me-1"></i>Finalise &amp; Notify Volunteers
+      </button>
+    </div>
+  </form>
+
+</div>
+</div>
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/heatmap.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load custom_filters %}
+{% block title %}Urgency Heatmap â€“ NeedsMesh{% endblock %}
+{% block page_title %}High-Priority Heatmap{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  #heatmap { height: 600px; border-radius: 20px; z-index: 1; border: 1px solid rgba(255,255,255,0.3); }
+  .leaflet-container { background: #f8faff; font-family: 'Inter', sans-serif; }
+  .legend { 
+    padding: 15px; 
+    background: rgba(255,255,255,0.85); 
+    backdrop-filter: blur(10px);
+    border-radius: 12px; 
+    font-size: 0.75rem; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid white;
+  }
+  .legend-title { font-weight: 800; text-transform: uppercase; margin-bottom: 10px; color: #444; letter-spacing: 0.5px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-weight: 600; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate fadeInUp">
+  <div class="col-lg-9">
+    <div class="card-glass border-0 shadow-sm p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-geo-fill me-2"></i>Live Resource Allocation Map</h5>
+        <div class="small text-muted"><i class="bi bi-dot text-success pulse"></i> Real-time Distribution</div>
+      </div>
+      
+      <div id="heatmap" class="shadow-sm"></div>
+
+      {% if not heatmap_data_json or heatmap_data_json == '[]' %}
+      <div class="alert alert-info mt-4 border-0 bg-light shadow-sm d-flex align-items-center">
+        <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
+        <div>
+          <div class="fw-bold">No Spatial Data Available</div>
+          <div class="small">Assign coordinates to your localities in the <a href="{% url 'manage_localities' %}" class="fw-bold">Locality Manager</a> to activate the heatmap.</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+      <h6 class="fw-bold mb-4 small text-uppercase tracking-wider">Locality Pulse</h6>
+      <div class="locality-scroll" style="max-height: 500px; overflow-y: auto;">
+      {% for loc in localities %}
+      <div class="d-flex justify-content-between align-items-center p-3 mb-2 rounded-4 bg-white bg-opacity-50 border border-white shadow-sm transition hover-bg-light">
+        <div>
+          <div class="fw-bold small">{{ loc.name }}</div>
+          <div class="tiny text-muted">{{ loc.problems_count }} mission{{ loc.problems_count|pluralize }}</div>
+        </div>
+        {% urgency_badge loc.average_urgency %}
+      </div>
+      {% empty %}
+      <p class="text-muted small text-center py-5">No jurisdictional data.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const heatmapData = JSON.parse('{{ heatmap_data_json|escapejs|default:"[]" }}');
+
+// Standard map setup
+const map = L.map('heatmap', {
+    scrollWheelZoom: false
+}).setView([20.5937, 78.9629], 5);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; NeedsMesh OpenData',
+  maxZoom: 18,
+}).addTo(map);
+
+function urgencyColor(u) {
+  if (u >= 9) return '#dc3545'; // Danger Red
+  if (u >= 7) return '#fd7e14'; // Orange
+  if (u >= 5) return '#ffc107'; // Warning Yellow
+  return '#198754'; // Success Green
+}
+
+function urgencyRadius(u) {
+  return 10 + (u * 3);
+}
+
+const bounds = [];
+
+heatmapData.forEach(function(d) {
+  const color = urgencyColor(d.urgency);
+  const pos = [d.lat, d.lng];
+  bounds.push(pos);
+  
+  const circle = L.circleMarker(pos, {
+    radius: urgencyRadius(d.urgency),
+    fillColor: color,
+    color: 'white',
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.7,
+  }).addTo(map);
+
+  circle.bindPopup(`
+    <div class="p-1">
+      <div class="fw-bold border-bottom pb-1 mb-1">${d.name}</div>
+      <div class="small">Impact Score: <span class="fw-bold" style="color:${color}">${d.urgency}/10</span></div>
+    </div>
+  `);
+});
+
+if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [50, 50] });
+}
+
+// Legend
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = function() {
+  const div = L.DomUtil.create('div', 'legend');
+  div.innerHTML = `
+    <div class="legend-title">Impact Intensity</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#dc3545"></span>Critical (9+)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#fd7e14"></span>High Exposure (7â€“8)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ffc107"></span>Informed Review (5â€“6)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#198754"></span>Under Monitoring (1â€“4)</div>
+  `;
+  return div;
+};
+legend.addTo(map);
+</script>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/kill_problem.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Kill Task â€“ NeedsMesh{% endblock %}
+{% block page_title %}Kill Task{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-6">
+<div class="card-glass p-4 border-danger-soft">
+  <h5 class="fw-bold text-danger mb-1"><i class="bi bi-x-octagon me-2"></i>Kill Task</h5>
+  <p class="text-muted small mb-4">{{ problem.locality }} Â· {{ problem.short_statement }}</p>
+
+  <div class="alert alert-warning py-2 mb-4">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    Killing a task is permanent. This will notify any interested volunteers.
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Reason for Killing *</label>
+      <textarea name="killed_reason" class="form-control" rows="4"
+        placeholder="Explain why this task is being cancelled..." required></textarea>
+    </div>
+    <div class="d-flex gap-2 justify-content-end">
+      <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-danger px-4">
+        <i class="bi bi-x-octagon me-1"></i>Confirm Kill
+      </button>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/login.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Sign In â€“ NeedsMesh{% endblock %}
+
+{% block content_auth %}
+<div class="auth-card animate fadeIn">
+  <div class="auth-logo mb-4">
+    <img src="{% static 'NeedsMeshApp/img/logo.png' %}" alt="Logo" height="80" class="mb-3 animate bounceIn">
+    <h2 class="fw-bold text-primary">Welcome</h2>
+    <p class="text-muted small">Collaborative Resource Coordination</p>
+  </div>
+
+  <form method="post" novalidate class="mt-4">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="form-label small fw-bold text-muted text-uppercase">Identity or Username</label>
+      <div class="input-group mb-3 border rounded-3 p-1 bg-white shadow-sm transition-focus">
+        <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-person-circle"></i></span>
+        <input type="text" name="username" class="form-control border-0 bg-transparent"
+          placeholder="Enter your username" required>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <label class="form-label small fw-bold text-muted">SECURE PASSWORD</label>
+        <a href="#" class="tiny text-primary text-decoration-none fw-bold">Forgot?</a>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock text-primary"></i></span>
+        <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary-custom w-100 py-3 shadow-sm">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Access Platform
+    </button>
+  </form>
+
+  <div class="text-center mt-4">
+    <p class="text-muted small">New to the community? <a href="{% url 'register' %}"
+        class="text-primary fw-bold text-decoration-none">Create Account</a></p>
+  </div>
+</div>
+{% endblock %}
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/manage_applications.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Pending Applications â€“ NeedsMesh{% endblock %}
+{% block page_title %}Field Worker Applications{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h5 class="fw-bold mb-1"><i class="bi bi-person-check-fill me-2 text-primary"></i>Pending Applications</h5>
+        <p class="text-muted small mb-0">Review and approve field workers who wish to join your organisation.</p>
+      </div>
+      <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fs-6">
+        {{ pending|length }} Pending
+      </span>
+    </div>
+
+    {% if pending %}
+    <div class="row g-4">
+      {% for wp in pending %}
+      <div class="col-md-6">
+        <div class="card-glass border-0 shadow-sm p-4 h-100">
+
+          <!-- Avatar + name -->
+          <div class="d-flex align-items-center mb-3">
+            <div class="me-3" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span class="fw-bold text-white fs-5">{{ wp.full_name|slice:":1"|upper }}</span>
+            </div>
+            <div>
+              <div class="fw-bold">{{ wp.full_name }}</div>
+              <div class="text-muted small">@{{ wp.user.username }}</div>
+            </div>
+            <span class="ms-auto badge" style="background:rgba(245,158,66,.15);color:#d97706;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;">
+              <i class="bi bi-hourglass-split me-1"></i>Pending
+            </span>
+          </div>
+
+          <!-- Details -->
+          <div class="row g-2 mb-4">
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Organisation</div>
+              <div class="small fw-semibold">
+                <i class="bi bi-building text-primary me-1"></i>
+                {{ wp.organisation|default:"â€”" }}
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Locality</div>
+              <div class="small fw-semibold">
+                <i class="bi bi-pin-map text-primary me-1"></i>
+                {{ wp.locality|default:"â€”" }}
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Email</div>
+              <div class="small text-truncate">{{ wp.user.email }}</div>
+            </div>
+            <div class="col-6">
+              <div class="tiny text-muted text-uppercase fw-bold mb-1">Applied</div>
+              <div class="small">{{ wp.user.date_joined|date:"d M Y" }}</div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex gap-2">
+            <form method="post" action="{% url 'approve_worker' wp.pk %}" class="flex-grow-1">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success w-100 rounded-pill shadow-sm">
+                <i class="bi bi-check-circle-fill me-1"></i>Approve
+              </button>
+            </form>
+            <form method="post" action="{% url 'reject_worker' wp.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger rounded-pill px-4"
+                      onclick="return confirm('Reject and delete this application? This cannot be undone.')">
+                <i class="bi bi-x-circle me-1"></i>Reject
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="card-glass text-center p-5 border-0 shadow-sm">
+      <div class="mb-4">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#22c55e15,#22c55e30);display:inline-flex;align-items:center;justify-content:center;">
+          <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+        </div>
+      </div>
+      <h5 class="fw-bold mb-2">All Clear!</h5>
+      <p class="text-muted small">There are no pending field worker applications at the moment.</p>
+      <a href="{% url 'dashboard' %}" class="btn btn-primary-custom rounded-pill px-4 mt-2">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/manage_localities.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Manage Localities â€“ NeedsMesh{% endblock %}
+{% block page_title %}Manage Localities{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Add Locality Form -->
+  <div class="col-lg-5">
+    <div class="card-glass p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-pin-map me-2"></i>Add New Locality</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Locality Name *</label>
+          {{ form.name }}
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold">Latitude</label>
+            {{ form.latitude }}
+            <small class="text-muted">e.g. 19.0760</small>
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold">Longitude</label>
+            {{ form.longitude }}
+            <small class="text-muted">e.g. 72.8777</small>
+          </div>
+        </div>
+        <button type="submit" name="add_locality" class="btn btn-primary-custom w-100">
+          <i class="bi bi-plus-circle me-1"></i>Add Locality
+        </button>
+      </form>
+    </div>
+
+    <!-- CSV Import -->
+    <div class="card-glass p-4 mt-3">
+      <h5 class="fw-bold mb-1"><i class="bi bi-filetype-csv me-2"></i>Import from CSV</h5>
+      <p class="text-muted small mb-3">CSV must have columns: <code>name, latitude, longitude</code></p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ csv_form.csv_file }}
+        <button type="submit" name="upload_csv" class="btn btn-outline-success mt-2 w-100">
+          <i class="bi bi-upload me-1"></i>Import CSV
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Localities List -->
+  <div class="col-lg-7">
+    <div class="card-glass p-3">
+      <h5 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>All Localities ({{ localities.count }})</h5>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Avg Urgency</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for loc in localities %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ loc.name }}</td>
+              <td>{{ loc.latitude|default:"â€“" }}</td>
+              <td>{{ loc.longitude|default:"â€“" }}</td>
+              <td>
+                {% if loc.average_urgency > 0 %}
+                <span class="urgency-pill urgency-{{ loc.average_urgency|floatformat:"0" }}">
+                  {{ loc.average_urgency }}
+                </span>
+                {% else %}
+                <span class="text-muted">â€“</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'delete_locality' loc.pk %}"
+                      onsubmit="return confirm('Delete {{ loc.name }}?')">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">No localities yet. Add one above.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/manage_users.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Manage Users â€“ NeedsMesh{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="card-glass p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>All Users ({{ profiles.count }})</h5>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Current Role</th>
+          <th>Tasks Done</th>
+          <th>Badge</th>
+          <th>Change Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile in profiles %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="fw-semibold">{{ profile.full_name }}</td>
+          <td class="text-muted small">{{ profile.user.email }}</td>
+          <td>
+            <span class="role-badge role-{{ profile.role }}">{{ profile.get_role_display }}</span>
+          </td>
+          <td>{{ profile.completed_tasks }}</td>
+          <td>
+            {% if profile.has_badge %}
+            <i class="bi bi-trophy-fill text-warning" title="Champion Badge"></i>
+            {% else %}
+            <span class="text-muted">â€“</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" class="d-flex gap-2 align-items-center">
+              {% csrf_token %}
+              <input type="hidden" name="profile_id" value="{{ profile.pk }}" />
+              <select name="role" class="form-select form-select-sm" style="width:auto;">
+                <option value="volunteer" {% if profile.role == 'volunteer' %}selected{% endif %}>Volunteer</option>
+                <option value="field_worker" {% if profile.role == 'field_worker' %}selected{% endif %}>Field Worker</option>
+                <option value="admin" {% if profile.role == 'admin' %}selected{% endif %}>Admin</option>
+              </select>
+              <button type="submit" class="btn btn-sm btn-primary-custom">Update</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/needs_board.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Community Needs Board â€“ NeedsMesh{% endblock %}
+{% block page_title %}Community Needs Board{% endblock %}
+
+{% block content %}
+
+<!-- Filter Bar -->
+<div class="card-glass p-3 mb-4 shadow-sm border-0">
+  <form method="get" 
+        hx-get="{% url 'needs_board' %}" 
+        hx-target="#needs-list-container" 
+        hx-trigger="change, keyup delay:500ms"
+        class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small fw-bold text-muted">Locality</label>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt"></i></span>
+        <select name="locality" class="form-select border-start-0 ps-0">
+          <option value="">All Localities</option>
+          {% for loc in localities %}
+          <option value="{{ loc.name }}" {% if loc.name == locality_filter %}selected{% endif %}>{{ loc.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <label class="form-label small fw-bold text-muted">Category</label>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-tag"></i></span>
+        <select name="category" class="form-select border-start-0 ps-0">
+          <option value="">All Categories</option>
+          {% for val, label in category_choices %}
+          <option value="{{ val }}" {% if val == category_filter %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="col-md-2">
+      <label class="form-label small fw-bold text-muted">Min Urgency</label>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-fire"></i></span>
+        <select name="urgency" class="form-select border-start-0 ps-0">
+          <option value="">Any</option>
+          <option value="5" {% if urgency_filter == "5" %}selected{% endif %}>5+</option>
+          <option value="7" {% if urgency_filter == "7" %}selected{% endif %}>7+</option>
+          <option value="9" {% if urgency_filter == "9" %}selected{% endif %}>Critical (9+)</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="col-md-2 d-flex gap-2">
+      <a href="{% url 'needs_board' %}" class="btn btn-light btn-sm flex-fill border">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Needs List Container -->
+{% include 'NeedsMeshApp/partials/needs_list.html' %}
+
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/pending_approval.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% block title %}Pending Approval â€“ NeedsMesh{% endblock %}
+{% block page_title %}Application Pending{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-lg-6 col-md-8">
+    <div class="card-glass text-center p-5 shadow-lg border-0">
+
+      <!-- Animated clock icon -->
+      <div class="mb-4">
+        <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#f59e42,#fbbf24);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(251,191,36,.35);">
+          <i class="bi bi-hourglass-split fs-1 text-white"></i>
+        </div>
+      </div>
+
+      <h3 class="fw-bold mb-2">Application Under Review</h3>
+      <p class="text-muted mb-4">
+        Hi <strong>{{ profile.full_name }}</strong>, your request to join
+        <strong>{{ profile.organisation }}</strong> is currently pending approval
+        from the NGO administrator.
+      </p>
+
+      <!-- Status timeline -->
+      <div class="text-start mb-4 px-3">
+        <div class="d-flex align-items-start mb-3">
+          <div class="me-3 mt-1">
+            <span style="width:28px;height:28px;border-radius:50%;background:#22c55e;display:inline-flex;align-items:center;justify-content:center;">
+              <i class="bi bi-check text-white small fw-bold"></i>
+            </span>
+          </div>
+          <div>
+            <div class="fw-semibold small">Account Created</div>
+            <div class="text-muted tiny">Your profile has been successfully registered.</div>
+          </div>
+        </div>
+        <div class="d-flex align-items-start mb-3">
+          <div class="me-3 mt-1">
+            <span style="width:28px;height:28px;border-radius:50%;background:#f59e42;display:inline-flex;align-items:center;justify-content:center;">
+              <i class="bi bi-hourglass text-white small"></i>
+            </span>
+          </div>
+          <div>
+            <div class="fw-semibold small">Awaiting NGO Approval</div>
+            <div class="text-muted tiny">The admin of <strong>{{ profile.organisation }}</strong> will review your application.</div>
+          </div>
+        </div>
+        <div class="d-flex align-items-start">
+          <div class="me-3 mt-1">
+            <span style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;display:inline-flex;align-items:center;justify-content:center;">
+              <i class="bi bi-rocket-takeoff text-muted small"></i>
+            </span>
+          </div>
+          <div>
+            <div class="fw-semibold small text-muted">Access Granted</div>
+            <div class="text-muted tiny">Once approved, you'll have full platform access.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info border-0 text-start small py-2 px-3 mb-4" style="background:rgba(59,130,246,.08);border-radius:12px;">
+        <i class="bi bi-bell-fill me-2 text-primary"></i>
+        You'll receive a notification here as soon as your application is approved.
+      </div>
+
+      <div class="d-flex gap-2 justify-content-center">
+        <a href="{% url 'logout' %}" class="btn btn-outline-secondary rounded-pill px-4">
+          <i class="bi bi-box-arrow-right me-1"></i>Sign Out
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary-custom rounded-pill px-4">
+          <i class="bi bi-arrow-clockwise me-1"></i>Check Status
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/problem_detail.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load custom_filters %}
+{% block title %}Case #{{ problem.pk }} Detail â€“ NeedsMesh{% endblock %}
+{% block page_title %}Case File: {{ problem.locality }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate fadeInUp">
+
+  <!-- Main Case File -->
+  <div class="col-lg-8">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+
+      <!-- Case Header -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div class="d-flex align-items-center gap-3">
+          <span class="status-badge status-{{ problem.status }} rounded-pill px-4 py-1 fw-bold">{{ problem.status|upper }}</span>
+          <span class="text-muted small"><strong>Ref:</strong> #NM-{{ problem.pk|stringformat:"05d" }}</span>
+        </div>
+        <div class="urgency-pill urgency-{{ problem.urgency }} shadow-sm">
+          Priority Level: {{ problem.urgency }}/10
+        </div>
+      </div>
+
+      <!-- Core Details -->
+      <div class="row mb-4">
+        <div class="col-md-7">
+          <h3 class="fw-bold text-primary mb-1">{{ problem.locality }}</h3>
+          <div class="d-flex flex-wrap gap-1 mb-3">
+            {% for cat in problem.get_category_display_list %}
+            <span class="badge bg-light text-primary border border-primary border-opacity-25 rounded-pill px-3">{{ cat }}</span>
+            {% endfor %}
+          </div>
+          <!-- Volunteer Requirement & Progress -->
+          <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i>Mission Personnel</h5>
+              {% if user.profile.role == 'admin' and problem.organisation == user.profile.organisation and problem.status in 'open,assigned' %}
+              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                data-bs-target="#volRequirementModal">
+                <i class="bi bi-pencil-square"></i> Set Target
+              </button>
+              {% endif %}
+            </div>
+
+            {% if problem.volunteers_required > 0 %}
+            <div class="mb-2 d-flex justify-content-between small">
+              <span class="text-muted">Target: {{ problem.volunteers_required }} Volunteers</span>
+              <span class="fw-bold">{{ problem.interested_volunteers.count }} Fulfilled</span>
+            </div>
+            {% with progress=problem.interested_volunteers.count|percentage:problem.volunteers_required %}
+            <div class="progress mb-3" style="height: 12px; border-radius: 6px;">
+              <div
+                class="progress-bar {% if progress >= 100 %}bg-success{% else %}bg-primary{% endif %} progress-bar-striped progress-bar-animated"
+                role="progressbar" id="personnel-progress" style=" width: {{ progress|floatformat:0 }}%;"
+                aria-valuenow="{{ progress|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100"
+                data-progress="{{ progress|floatformat:0 }}"></div>
+            </div>
+            {% if progress >= 100 %}
+            <div class="alert alert-success py-2 tiny mb-0"><i class="bi bi-check-circle-fill me-2"></i>Personnel
+              requirement fulfilled! Ready for finalisation.</div>
+            {% endif %}
+            {% endwith %}
+            {% else %}
+            <div class="text-center py-3 border rounded border-dashed text-muted small">
+              Organisation Admin has not yet set the volunteer target for this mission.
+            </div>
+            {% endif %}
+          </div>
+          <div class="fw-bold h6">{{ problem.detected_date|date:"F d, Y" }}</div>
+        </div>
+      </div>
+
+      <!-- Problem Statement Section -->
+      <div class="bg-light bg-opacity-50 rounded-4 p-4 mb-4 border border-white">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">Project Scope & Problem Statement</h6>
+        {% if show_full %}
+        <div class="lead" style="font-size: 1.1rem; line-height: 1.7;">{{ problem.problem_statement|linebreaks }}</div>
+        {% else %}
+        <div class="text-muted">{{ problem.short_statement }}...</div>
+        <div
+          class="mt-3 p-3 bg-white bg-opacity-50 rounded-3 border border-info border-opacity-25 d-flex align-items-center">
+          <i class="bi bi-shield-lock-fill text-info fs-4 me-3"></i>
+          <span class="small">Detailed project requirements and sensitive data are restricted to approved task
+            volunteers.</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Media & Documentation -->
+      {% if show_full and problem.proof_images.exists %}
+      <div class="mb-4">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">Field Documentation ({{
+          problem.proof_images.count }})</h6>
+        <div class="row g-2">
+          {% for img in problem.proof_images.all %}
+          <div class="col-4 col-md-3">
+            <a href="{{ img.image.url }}" target="_blank" class="d-block card-glass p-1 h-100 hover-zoom">
+              <img src="{{ img.image.url }}" alt="Proof" class="img-fluid rounded-3"
+                style="object-fit: cover; height: 100px; width: 100%;">
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Case Progress Log -->
+      <div class="mt-auto pt-4 border-top">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">Case History & Performance</h6>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="card-glass bg-white bg-opacity-50 border-0 p-3 h-100">
+              <div class="text-muted tiny text-uppercase mb-1">Impact Goal</div>
+              <div class="small fw-bold">{{ problem.total_need|default:"Awaiting Assessment"|truncatechars:60 }}</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-glass bg-white bg-opacity-50 border-0 p-3 h-100">
+              <div class="text-muted tiny text-uppercase mb-1">Resource Pool</div>
+              <div class="small fw-bold">{{ problem.interested_volunteers.count }} Qualified Applicants</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-glass bg-white bg-opacity-50 border-0 p-3 h-100">
+              <div class="text-muted tiny text-uppercase mb-1">Scheduled Intervention</div>
+              <div class="small fw-bold">{% if problem.final_event_date %}{{ problem.final_event_date|date:"M d @ H:i" }}{% else %}TBD{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if problem.status == 'resolved' %}
+      <div class="mt-4 pt-4 border-top">
+        <h6 class="text-uppercase small fw-bold text-success tracking-wider mb-3"><i class="bi bi-check-circle-fill me-2"></i>Mission Outcomes & Resolution</h6>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card-glass border-0 shadow-sm p-4 h-100 bg-success bg-opacity-10 border border-success border-opacity-25">
+              <h6 class="fw-bold mb-3 text-success">Intervention Impact (Before/After)</h6>
+              <div class="small">{{ problem.before_after|default:"No details provided."|linebreaks }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-glass border-0 shadow-sm p-4 h-100 bg-info bg-opacity-10 border border-info border-opacity-25">
+              <h6 class="fw-bold mb-3 text-info">Community Reaction</h6>
+              <div class="small">{{ problem.community_reaction|default:"No feedback recorded."|linebreaks }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if problem.killed_reason %}
+      <div class="alert alert-danger mt-4 border-0 shadow-sm d-flex align-items-center">
+        <i class="bi bi-x-circle-fill fs-3 me-3"></i>
+        <div>
+          <div class="fw-bold">Mission Terminated</div>
+          <div class="small">{{ problem.killed_reason }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Communications Loop (Only Visible to Admin & Primary Team & Applicants) -->
+      {% if profile.role == 'admin' and problem.organisation == user.profile.organisation or user in problem.interested_volunteers.all %}
+      <div class="mt-5 pt-4 border-top">
+        <h6 class="text-uppercase small fw-bold text-primary tracking-wider mb-4"><i
+            class="bi bi-chat-left-dots-fill me-2"></i>Mission Communications Loop</h6>
+
+        <div class="glass-card bg-light bg-opacity-25 rounded-4 p-4 border border-info border-opacity-25">
+          <div id="messages-container" class="mb-4" style="max-height: 400px; overflow-y: auto;">
+            {% for msg in problem.messages.all %}
+            {% include 'NeedsMeshApp/partials/message_item.html' %}
+            {% empty %}
+            <div class="text-center text-muted small py-4" id="empty-msg"><i
+                class="bi bi-chat-quote mb-2 fs-3 d-block"></i>No communication history. Secure line is open.</div>
+            {% endfor %}
+          </div>
+
+          <form hx-post="{% url 'post_problem_message' problem.pk %}" hx-target="#messages-container"
+            hx-swap="beforeend"
+            hx-on::after-request="this.reset(); document.getElementById('empty-msg')?.remove(); const container = document.getElementById('messages-container'); container.scrollTop = container.scrollHeight;"
+            class="d-flex align-items-end gap-2">
+            {% csrf_token %}
+            <div class="flex-grow-1">
+              <textarea name="content" class="form-control form-control-sm border-0 shadow-sm" rows="2"
+                placeholder="Send a secure message to the team..." required style="resize: none;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary-custom px-4 py-2 shadow-sm rounded-3"><i
+                class="bi bi-send-fill"></i></button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Sidebar: Strategy & Coordination -->
+  <div class="col-lg-4">
+
+    <!-- Strategy Actions -->
+    {% if profile.role == 'admin' and problem.status in 'open,assigned' %}
+    <div class="card-glass border-0 shadow-sm p-4 mb-4 bg-primary bg-opacity-10">
+      <h6 class="fw-bold mb-4 d-flex align-items-center">
+        <i class="bi bi-cpu-fill me-2 text-primary"></i>Command & Control
+      </h6>
+      <div class="d-grid gap-2">
+        {% if problem.status == 'open' %}
+        {% if user.profile.role == 'admin' and problem.organisation == user.profile.organisation %}
+        <!-- NGO Admin can set target first -->
+        {% if problem.volunteers_required == 0 %}
+        <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#volRequirementModal">
+          <i class="bi bi-people-fill me-1"></i>Set Volunteer Target
+        </button>
+        {% endif %}
+        {% endif %}
+
+        <a href="{% url 'finalise_event' problem.pk %}"
+          class="btn btn-primary-custom shadow-sm {% if problem.volunteers_required > 0 and problem.interested_volunteers.count < problem.volunteers_required %}disabled{% endif %}">
+          <i class="bi bi-check2-circle me-1"></i>Approve Team &amp; Schedule
+        </a>
+        {% endif %}
+
+        {% if problem.status in 'open,assigned' %}
+        <a href="{% url 'resolve_problem' problem.pk %}"
+          class="btn btn-light border border-secondary text-dark shadow-sm">
+          <i class="bi bi-arrow-right-circle-fill me-1"></i>Update Roadmap
+        </a>
+        {% if problem.status != 'killed' %}
+        <a href="{% url 'kill_problem' problem.pk %}" class="btn btn-link text-danger text-decoration-none mt-2 small">
+          <i class="bi bi-trash3 me-1"></i>Decommission Task
+        </a>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AI/Smart Matching -->
+    {% if suggested_volunteers and problem.status == 'open' %}
+    <div class="card-glass border-0 shadow-sm p-4 mb-4">
+      <h6 class="fw-bold mb-3 d-flex align-items-center">
+        <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Smart Match Suggestions
+      </h6>
+      <div class="volunteer-pile mt-3">
+        {% for vol in suggested_volunteers %}
+        <div class="d-flex align-items-center p-2 mb-2 rounded-3 bg-light border border-white">
+          <div
+            class="avatar-sm bg-warning text-white rounded-pill me-3 small fw-bold d-flex align-items-center justify-content-center"
+            style="width:32px; height:32px;">
+            {{ vol.profile.full_name|first }}
+          </div>
+          <div class="flex-grow-1">
+            <div class="fw-bold tiny">{{ vol.profile.full_name }}</div>
+            <div class="tiny text-muted">98% Capability Match</div>
+          </div>
+          {% if vol.profile.has_badge %}<i class="bi bi-patch-check-fill text-primary ms-auto" title="Expert"></i>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Resource Selection (Visible to relevant users) -->
+    <div class="card-glass border-0 shadow-sm p-4 mb-4">
+      <h6 class="fw-bold mb-4"><i class="bi bi-people-fill me-2 text-primary"></i>Deployment Roster</h6>
+
+      <!-- Current Team -->
+      <div class="mb-4">
+        <div class="text-muted tiny text-uppercase fw-bold mb-2">Primary Team</div>
+        {% for vol in problem.selected_volunteers.all %}
+        <div
+          class="d-flex flex-column p-2 bg-success bg-opacity-10 text-success rounded-3 mb-2 small border border-success border-opacity-25">
+          <span class="fw-bold"><i class="bi bi-check-circle-fill me-2"></i>{{ vol.profile.full_name }}</span>
+          <span class="ms-4 opacity-75 tiny"><i class="bi bi-envelope-at me-1"></i><a href="mailto:{{ vol.email }}"
+              class="text-decoration-none text-success">{{ vol.email }}</a></span>
+        </div>
+        {% empty %}
+        <div class="p-3 border border-dashed rounded-3 text-center text-muted tiny">
+          No team deployed yet.
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Interested Reserve -->
+      {% if profile.role == 'admin' or is_selected %}
+      <div class="mb-2">
+        <div class="text-muted tiny text-uppercase fw-bold mb-2">Applicants ({{ problem.interested_volunteers.count }})
+        </div>
+        {% for vol in problem.interested_volunteers.all %}
+        {% if vol not in problem.selected_volunteers.all %}
+        <div class="d-flex flex-column mb-2 p-2 bg-light rounded-2 tiny border border-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark"><i class="bi bi-person me-2"></i>{{ vol.profile.full_name }}</span>
+            {% if profile.role == 'admin' and problem.organisation == user.profile.organisation %}
+            <div class="btn-group">
+                <form action="{% url 'accept_volunteer' problem.pk vol.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success py-0 px-2 shadow-none" title="Accept" style="font-size: 0.75rem;"><i class="bi bi-check2"></i> Accept</button>
+                </form>
+                <form action="{% url 'reject_volunteer' problem.pk vol.pk %}" method="post" class="d-inline ms-1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 shadow-none" title="Reject" style="font-size: 0.75rem;"><i class="bi bi-x-lg"></i></button>
+                </form>
+            </div>
+            {% endif %}
+          </div>
+          <span class="text-muted ms-4 mt-1"><i class="bi bi-envelope-at me-1"></i><a href="mailto:{{ vol.email }}"
+              class="text-decoration-none text-muted">{{ vol.email }}</a></span>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Active Volunteer Engagement -->
+    {% if profile.role == 'volunteer' %}
+    <div id="volunteer-action-zone">
+      {% if is_selected %}
+      <div class="card-glass bg-success text-white border-0 p-4 text-center shadow-lg">
+        <i class="bi bi-rocket-takeoff-fill fs-1 mb-3"></i>
+        <h5 class="fw-bold">Deployment Ready</h5>
+        <p class="small opacity-75">You have been selected for this mission. Review the project scope carefully.</p>
+        {% if problem.final_event_date %}
+        <div class="bg-white bg-opacity-20 p-2 rounded-pill small fw-bold mt-3">
+          <i class="bi bi-clock-history me-1"></i> {{ problem.final_event_date|date:"D, M d @ H:i" }}
+        </div>
+        {% endif %}
+      </div>
+      {% elif problem.status == 'open' %}
+      <div class="card-glass border-primary border-dashed p-4 text-center">
+        <h6 class="fw-bold mb-3">Available Mission</h6>
+        <p class="small text-muted mb-4">Support this community by offering your unique skills. Impact assessment: High.
+        </p>
+
+        {% if user in problem.interested_volunteers.all %}
+        <div class="btn btn-success rounded-pill w-100 disabled">
+          <i class="bi bi-shield-fill-check me-2"></i>Application Submitted
+        </div>
+        {% elif problem.volunteers_required > 0 and problem.interested_volunteers.count >= problem.volunteers_required %}
+        <div class="btn btn-secondary rounded-pill w-100 disabled">
+          <i class="bi bi-x-circle-fill me-2"></i>Target Fulfilled
+        </div>
+        {% else %}
+        <button hx-post="{% url 'offer_help' problem.pk %}" hx-target="#volunteer-action-zone" hx-swap="innerHTML"
+          class="btn btn-primary-custom w-100 rounded-pill shadow">
+          <i class="bi bi-hand-thumbs-up-fill me-2"></i>Apply to Assist
+        </button>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Modal for Setting Volunteer Target -->
+<div class="modal fade" id="volRequirementModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header border-0 bg-primary bg-opacity-10">
+        <h5 class="modal-title fw-bold text-primary"><i class="bi bi-people-fill me-2"></i>Set Volunteer Target</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'set_volunteers_required' problem.pk %}">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+          <p class="small text-muted mb-4">Specify the number of field volunteers required to fulfill this mission.</p>
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-uppercase">Volunteers Required</label>
+            <input type="number" name="volunteers_required" class="form-control form-control-lg" min="1"
+              value="{{ problem.volunteers_required|default:1 }}" required>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4 pt-0">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Save Target</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/profile.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}My Impact Profile â€“ NeedsMesh{% endblock %}
+{% block page_title %}Mission Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate fadeInUp">
+
+  <!-- Profile Card (Legacy & Stats) -->
+  <div class="col-lg-4">
+    <div class="card-glass border-0 shadow-sm text-center p-4 h-100">
+      <div class="position-relative d-inline-block mb-4">
+        <div class="avatar-circle mx-auto bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 shadow-sm" style="width: 100px; height: 100px; line-height: 100px; font-size: 2.5rem; font-weight: 800;">
+          {{ profile.full_name|default:user.username|first|upper }}
+        </div>
+        <div class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle" style="width: 20px; height: 20px;" title="Online Status"></div>
+      </div>
+      
+      <h4 class="fw-bold mb-1">{{ profile.full_name }}</h4>
+      <p class="text-muted small mb-3"><i class="bi bi-envelope-at me-2"></i>{{ user.email }}</p>
+      
+      <div class="mb-4">
+        <span class="badge rounded-pill role-badge-lg px-3 py-2 role-{{ profile.role }} shadow-sm">
+          <i class="bi bi-shield-check me-1"></i> {{ profile.get_role_display }}
+        </span>
+      </div>
+
+      <div class="p-3 bg-light bg-opacity-50 rounded-4 border border-white shadow-sm">
+        {% if profile.role == 'volunteer' %}
+          {% if profile.has_badge %}
+          <div class="badge-trophy animate bounceIn">
+            <i class="bi bi-patch-check-fill text-primary fs-1 mb-2 d-block"></i>
+            <p class="mb-0 fw-bold text-dark">Elite Community Contributor</p>
+            <div class="tiny text-muted mt-1">Badge earned after {{ profile.completed_tasks }} successful missions</div>
+          </div>
+          {% else %}
+          <div class="text-start">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="tiny fw-bold text-uppercase text-muted">Contribution Goal</span>
+              <span class="tiny fw-bold text-primary">{{ profile.completed_tasks }}/3 Missions</span>
+            </div>
+            <div class="progress rounded-pill shadow-inner" style="height: 10px; background: rgba(0,0,0,0.05);">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary {% if profile.completed_tasks == 1 %}w-33{% elif profile.completed_tasks == 2 %}w-66{% elif profile.completed_tasks >= 3 %}w-100{% else %}w-0{% endif %}" 
+                   role="progressbar"></div>
+            </div>
+            <p class="tiny text-muted mt-2 mb-0">Help resolve <span class="fw-bold">{{ 3|subtract:profile.completed_tasks }} more tasks</span> to unlock your verified status badge.</p>
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="text-start">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="tiny fw-bold text-uppercase text-muted">Organisation Staff</span>
+              <span class="tiny fw-bold text-primary">Active Member</span>
+            </div>
+            <p class="tiny text-muted mt-2 mb-0">You are providing structural support via the {{ profile.get_role_display }} role.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if profile.role == 'volunteer' and profile.resume %}
+      <div class="mt-4 pt-3 border-top">
+        <a href="{{ profile.resume.url }}" class="btn btn-white btn-sm shadow-sm border w-100 py-2 rounded-3 text-primary fw-bold" target="_blank">
+          <i class="bi bi-file-earmark-pdf me-2"></i>View Verified Credentials
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Profile Configuration Form -->
+  <div class="col-lg-8">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-4 text-primary me-3">
+          <i class="bi bi-gear-wide-connected fs-4"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0">Account Settings</h5>
+          <p class="text-muted small mb-0">Manage your identity and mission credentials.</p>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        
+        <div class="row g-4">
+          <div class="col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Full Legal Name</label>
+            {{ form.full_name|add_class:"form-control border-light shadow-sm py-2 px-3" }}
+            {% if form.full_name.errors %}<div class="text-danger tiny mt-1">{{ form.full_name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Authentication Email</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock-fill text-muted opacity-50"></i></span>
+              <input type="email" class="form-control bg-light border-start-0 ps-0" value="{{ user.email }}" disabled />
+            </div>
+            <div class="tiny text-muted mt-1">Managed via Identity Provider.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Assigned Jurisdiction</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-badge-fill text-muted opacity-50"></i></span>
+              <input type="text" class="form-control bg-light border-start-0 ps-0" value="{{ profile.get_role_display }}" disabled />
+            </div>
+            <div class="tiny text-muted mt-1">Roles are managed by organisation admins.</div>
+          </div>
+
+          {% if profile.role == 'volunteer' %}
+          <div class="col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Experience Credentials (CV/Resume)</label>
+            <div class="p-3 border border-dashed rounded-4 bg-light bg-opacity-50">
+              {{ form.resume|add_class:"form-control form-control-sm" }}
+              <div class="tiny text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Upload a PDF or DOCX file to verify your professional background.</div>
+            </div>
+            {% if form.resume.errors %}<div class="text-danger tiny mt-1">{{ form.resume.errors.0 }}</div>{% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end mt-5 pt-4 border-top">
+          <button type="submit" class="btn btn-primary-custom px-5 py-2 shadow rounded-pill">
+            <i class="bi bi-check2-circle me-2"></i>Commit Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/register.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Join NeedsMesh{% endblock %}
+
+{% block content_auth %}
+<div class="auth-card animate fadeIn" style="max-width: 520px;">
+  <div class="auth-logo mb-4">
+    <img src="{% static 'NeedsMeshApp/img/logo.png' %}" alt="Logo" height="60" class="mb-3">
+    <h2 class="fw-bold text-primary">Create Mission Profile</h2>
+    <p class="text-muted small">Join the network of change-makers</p>
+  </div>
+
+  <form method="post" novalidate id="register-form">
+    {% csrf_token %}
+
+    <!-- Always visible fields -->
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">CHOOSE IDENTITY</label>
+      {{ form.username|add_class:"form-control" }}
+      {% if form.username.errors %}<div class="text-danger tiny mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">FULL NAME</label>
+      {{ form.full_name|add_class:"form-control" }}
+      {% if form.full_name.errors %}<div class="text-danger tiny mt-1">{{ form.full_name.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">EMAIL ADDRESS</label>
+      {{ form.email|add_class:"form-control" }}
+      {% if form.email.errors %}<div class="text-danger tiny mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-6">
+        <label class="form-label small fw-bold text-muted">PASSWORD</label>
+        {{ form.password1|add_class:"form-control" }}
+        {% if form.password1.errors %}<div class="text-danger tiny mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-bold text-muted">CONFIRM</label>
+        {{ form.password2|add_class:"form-control" }}
+        {% if form.password2.errors %}<div class="text-danger tiny mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <!-- Role selector -->
+    <div class="mb-3">
+      <label class="form-label small fw-bold text-muted">SELECT YOUR MISSION ROLE</label>
+      <select name="role" id="roleSelect" class="form-select">
+        {% for val, label in form.role.field.choices %}
+        <option value="{{ val }}" {% if form.role.value == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if form.role.errors %}<div class="text-danger tiny mt-1">{{ form.role.errors.0 }}</div>{% endif %}
+    </div>
+
+    <!-- â”€â”€â”€ SHARED: Locality (shown for field_worker + volunteer) â”€â”€â”€ -->
+    <div id="locality-section" style="display:none;" class="mb-3">
+      <label id="locality-label" class="form-label small fw-bold text-muted">
+        <i class="bi bi-pin-map-fill me-1"></i>LOCALITY
+      </label>
+      <select name="locality" class="form-select" id="localitySelect">
+        <option value="">â€” Select Locality â€”</option>
+        {% for loc in form.locality.field.queryset %}
+        <option value="{{ loc.pk }}"
+          {% if form.locality.value == loc.pk|stringformat:"s" %}selected{% endif %}>{{ loc }}</option>
+        {% endfor %}
+      </select>
+      {% if form.locality.errors %}<div class="text-danger tiny mt-1">{{ form.locality.errors.0 }}</div>{% endif %}
+    </div>
+
+    <!-- â”€â”€â”€ ADMIN ONLY: NGO Name â”€â”€â”€ -->
+    <div id="admin-section" style="display:none;" class="mb-3">
+      <label class="form-label small fw-bold text-muted">
+        <i class="bi bi-building me-1"></i>NGO / ORGANISATION NAME *
+      </label>
+      {{ form.organisation_name|add_class:"form-control" }}
+      {% if form.organisation_name.errors %}<div class="text-danger tiny mt-1">{{ form.organisation_name.errors.0 }}</div>{% endif %}
+      <div class="form-text tiny text-muted">You become the primary admin of this NGO.</div>
+    </div>
+
+    <!-- â”€â”€â”€ FIELD WORKER ONLY: Choose Organisation â”€â”€â”€ -->
+    <div id="organisation-section" style="display:none;" class="mb-3">
+      <label class="form-label small fw-bold text-muted">
+        <i class="bi bi-building me-1"></i>SELECT ORGANISATION TO JOIN *
+      </label>
+      <select name="organisation_choice" class="form-select" id="organisationSelect">
+        <option value="">â€” Select Organisation â€”</option>
+        {% for org in form.organisation_choice.field.queryset %}
+        <option value="{{ org.pk }}"
+          {% if form.organisation_choice.value == org.pk|stringformat:"s" %}selected{% endif %}>{{ org }}</option>
+        {% endfor %}
+      </select>
+      {% if form.organisation_choice.errors %}<div class="text-danger tiny mt-1">{{ form.organisation_choice.errors.0 }}</div>{% endif %}
+      <div class="form-text tiny text-muted">
+        <i class="bi bi-info-circle me-1"></i>Your application will be reviewed by the NGO admin before access is granted.
+      </div>
+    </div>
+
+    <!-- â”€â”€â”€ VOLUNTEER ONLY: Expertise / Category â”€â”€â”€ -->
+    <div id="category-section" style="display:none;" class="mb-3">
+      <label class="form-label small fw-bold text-muted">
+        <i class="bi bi-stars me-1"></i>EXPERTISE AREA *
+      </label>
+      <select name="category" class="form-select" id="categorySelect">
+        <option value="">â€” Select Expertise â€”</option>
+        {% for val, label in form.category.field.choices %}
+        {% if val %}
+        <option value="{{ val }}"
+          {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+      {% if form.category.errors %}<div class="text-danger tiny mt-1">{{ form.category.errors.0 }}</div>{% endif %}
+      <div class="form-text tiny text-muted">Select the area that best matches your skills.</div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger py-2 mb-3 small">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2 shadow-sm">
+      <i class="bi bi-person-plus-fill me-2"></i>
+      <span id="submitLabel">Initialize Account</span>
+    </button>
+  </form>
+
+  <div class="text-center mt-4">
+    <p class="text-muted small">Part of a team already?
+      <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">Sign In</a>
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var roleSelect        = document.getElementById('roleSelect');
+  var localitySection   = document.getElementById('locality-section');
+  var localityLabel     = document.getElementById('locality-label');
+  var adminSection      = document.getElementById('admin-section');
+  var orgSection        = document.getElementById('organisation-section');
+  var catSection        = document.getElementById('category-section');
+  var submitLabel       = document.getElementById('submitLabel');
+
+  // Helper: show / hide an element
+  function show(el) { if (el) el.style.display = 'block'; }
+  function hide(el) { if (el) el.style.display = 'none'; }
+
+  function toggleFields() {
+    var role = roleSelect ? roleSelect.value : '';
+
+    // Reset all conditional sections
+    hide(localitySection);
+    hide(adminSection);
+    hide(orgSection);
+    hide(catSection);
+
+    if (role === 'admin') {
+      show(adminSection);
+      if (submitLabel) submitLabel.textContent = 'Create Organisation & Account';
+
+    } else if (role === 'field_worker') {
+      show(localitySection);
+      show(orgSection);
+      if (localityLabel) localityLabel.innerHTML = '<i class="bi bi-pin-map-fill me-1"></i>PRIMARY MISSION LOCALITY *';
+      if (submitLabel) submitLabel.textContent = 'Submit Application';
+
+    } else if (role === 'volunteer') {
+      show(localitySection);
+      show(catSection);
+      if (localityLabel) localityLabel.innerHTML = '<i class="bi bi-pin-map-fill me-1"></i>PREFERRED VOLUNTEER LOCALITY *';
+      if (submitLabel) submitLabel.textContent = 'Join as Volunteer';
+
+    } else {
+      if (submitLabel) submitLabel.textContent = 'Initialize Account';
+    }
+  }
+
+  if (roleSelect) {
+    roleSelect.addEventListener('change', toggleFields);
+  }
+
+  // Run immediately when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', toggleFields);
+  } else {
+    toggleFields();
+  }
+})();
+</script>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/resolve_problem.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Resolve Problem – NeedsMesh{% endblock %}
+{% block page_title %}Resolve Problem{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+<div class="card-glass p-4">
+  <h5 class="fw-bold mb-1"><i class="bi bi-patch-check me-2"></i>Resolve Problem</h5>
+  <p class="text-muted small mb-4">{{ problem.locality }} · Urgency {{ problem.urgency }}/10</p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Outcome Status *</label>
+      <select name="status" class="form-select">
+        <option value="resolved">✅ Resolved</option>
+        <option value="killed">❌ Killed</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Before / After Description</label>
+      <textarea name="before_after" class="form-control" rows="3"
+        placeholder="Describe the situation before and after the intervention...">{{ problem.before_after }}</textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Total Community Need Summary</label>
+      <textarea name="total_need" class="form-control" rows="2"
+        placeholder="Overall need assessment for the community...">{{ problem.total_need }}</textarea>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Community Reaction</label>
+      <textarea name="community_reaction" class="form-control" rows="2"
+        placeholder="How did the community respond? (emojis welcome 🎉🙏❤️)">{{ problem.community_reaction }}</textarea>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-success px-4">
+        <i class="bi bi-check-circle me-1"></i>Save Resolution
+      </button>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/submit_survey.html
+================================================
+{% extends 'NeedsMeshApp/base.html' %}
+{% load custom_filters %}
+{% block title %}Submit Survey â€“ NeedsMesh{% endblock %}
+{% block page_title %}New Field Submission{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate fadeInUp">
+  <div class="col-lg-10">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+      
+      <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3 text-primary">
+          <i class="bi bi-clipboard-pulse fs-3"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0">Community Impact Assessment</h5>
+          <p class="text-muted small mb-0">Accurate data ensures efficient resource allocation.</p>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+          <!-- Section 1: Core Identification -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">1. Primary Identification</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Locality Area *</label>
+                {{ survey_form.locality|add_class:"form-select border-primary border-opacity-10" }}
+                {% if survey_form.locality.errors %}<div class="text-danger tiny mt-1">{{ survey_form.locality.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Initial Detection Date *</label>
+                {{ survey_form.detected_date|add_class:"form-control border-primary border-opacity-10" }}
+                {% if survey_form.detected_date.errors %}<div class="text-danger tiny mt-1">{{ survey_form.detected_date.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Complexity & Categorization -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">2. Needs & Categorization</h6>
+            <label class="form-label small fw-bold mb-3">Service Categories (Select applicable) *</label>
+            <div class="row row-cols-2 row-cols-md-4 g-2">
+              {% for val, label in category_choices %}
+              <div class="col">
+                <input type="checkbox" class="btn-check" name="categories" value="{{ val }}" id="cat_{{ val }}" autocomplete="off">
+                <label class="category-pill-label w-100" for="cat_{{ val }}">
+                  <i class="bi bi-check-circle-fill"></i> {{ label }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            {% if survey_form.categories.errors %}<div class="text-danger tiny mt-3">Selection required.</div>{% endif %}
+          </div>
+
+          <!-- Section 3: Priority & Impact -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">3. Priority Assessment</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Urgency Index (1-10) *</label>
+                <div class="d-flex align-items-center gap-3">
+                  <span class="tiny fw-bold text-success">Low</span>
+                  {{ survey_form.urgency|add_class:"form-range flex-grow-1" }}
+                  <span class="tiny fw-bold text-danger">Critical</span>
+                </div>
+                {% if survey_form.urgency.errors %}<div class="text-danger tiny mt-1">{{ survey_form.urgency.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Qualitative Data -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">4. Qualitative Analysis</h6>
+            <label class="form-label small fw-bold">Comprehensive Problem Statement *</label>
+            {{ survey_form.problem_statement|add_class:"form-control border-primary border-opacity-10" }}
+            {% if survey_form.problem_statement.errors %}<div class="text-danger tiny mt-1">{{ survey_form.problem_statement.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- Section 5: Evidence -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">5. Photographic Evidence</h6>
+            <div class="p-4 border border-dashed border-primary border-opacity-25 rounded-4 bg-light bg-opacity-50 text-center">
+              <i class="bi bi-cloud-arrow-up fs-2 text-primary opacity-50 mb-2 p-3"></i>
+              <div class="small fw-bold mb-1">Upload Field Evidence</div>
+              <p class="tiny text-muted mb-3">Select multiple JPG or PNG files for review.</p>
+              <input type="file" name="images" class="form-control form-control-sm mx-auto" style="max-width: 300px;" multiple accept="image/*" />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="d-flex justify-content-end mt-5 pt-4 border-top gap-2">
+          <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4 text-muted">Discard</a>
+          <button type="submit" class="btn btn-primary-custom rounded-pill px-5 shadow">
+            <i class="bi bi-shield-check me-2"></i>Authenticate & Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Category selection pills */
+  .category-pill-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #475569;
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+  .category-pill-label:hover {
+    border-color: var(--primary-color, #1a73e8);
+    background: #eff6ff;
+    color: var(--primary-color, #1a73e8);
+  }
+  .category-pill-label i {
+    font-size: 1rem;
+    opacity: 0.4;
+    transition: opacity 0.18s;
+  }
+  /* SELECTED STATE â€” highlight, don't hide */
+  .btn-check:checked + .category-pill-label {
+    background: var(--primary-color, #1a73e8) !important;
+    border-color: var(--primary-color, #1a73e8) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(26,115,232,.3);
+  }
+  .btn-check:checked + .category-pill-label i {
+    opacity: 1 !important;
+  }
+</style>
+{% endblock %}
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/partials/message_item.html
+================================================
+<div class="d-flex mb-3 message-item animate fadeIn" id="msg-{{ msg.pk }}">
+  <div class="avatar-sm {% if msg.sender.profile.role == 'admin' %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+    {{ msg.sender.profile.full_name|first|upper }}
+  </div>
+  <div class="message-bubble bg-white p-3 rounded-4 shadow-sm border border-light flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <span class="fw-bold small">{{ msg.sender.profile.full_name }} {% if msg.sender.profile.role == 'admin' %}<span class="badge bg-primary ms-1 tiny">ADMIN</span>{% endif %}</span>
+      <span class="text-muted tiny">{{ msg.timestamp|date:"M d, H:i" }}</span>
+    </div>
+    <div class="small text-dark">{{ msg.content|linebreaksbr }}</div>
+  </div>
+</div>
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/partials/needs_list.html
+================================================
+<div class="row g-4" id="needs-list-container">
+  {% for problem in problems %}
+  <div class="col-md-6 col-xl-4">
+    {% include 'NeedsMeshApp/partials/problem_card.html' %}
+  </div>
+  {% empty %}
+  <div class="col-12 text-center py-5">
+    <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+    <p class="text-muted">No needs found matching your filters.</p>
+  </div>
+  {% endfor %}
+</div>
+
+
+
+================================================
+FILE: NeedsMeshApp/templates/NeedsMeshApp/partials/problem_card.html
+================================================
+<div class="card-glass h-100 d-flex flex-column">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <span class="badge bg-light text-dark shadow-sm">{{ problem.get_category_display_list|join:", " }}</span>
+    <span class="urgency-pill urgency-{{ problem.urgency }}">Urgency {{ problem.urgency }}/10</span>
+  </div>
+  
+  <h6 class="fw-bold mb-2">{{ problem.short_statement }}</h6>
+  <div class="text-muted small mb-3">
+    <i class="bi bi-geo-alt-fill me-1"></i> {{ problem.locality.name }}
+  </div>
+  
+  <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+    <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+      Details
+    </a>
+    
+    {% if user.profile.role == 'volunteer' %}
+      {% if user in problem.interested_volunteers.all %}
+      <span class="text-success small fw-bold animate bounceIn"><i class="bi bi-check-circle-fill me-1"></i>Offered</span>
+      {% else %}
+      <button hx-post="{% url 'offer_help' problem.pk %}" 
+              hx-target="closest .card-glass" 
+              hx-swap="outerHTML" 
+              class="btn btn-sm btn-primary-custom rounded-pill px-3">
+        I can help
+      </button>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+
+
+================================================
+FILE: NeedsMeshApp/templatetags/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: NeedsMeshApp/templatetags/custom_filters.py
+================================================
+from django import template
+from django.utils.safestring import mark_safe
+
+register = template.Library()
+
+@register.filter
+def filter_status(queryset, status):
+    if not queryset or not hasattr(queryset, 'filter'):
+        return []
+    return queryset.filter(status=status)
+
+@register.filter
+def add_class(value, arg):
+    """Adds a CSS class to a form field without overwriting existing attributes."""
+    if not hasattr(value, 'as_widget'):
+        return value
+    attrs = value.field.widget.attrs.copy()
+    existing_class = attrs.get('class', '')
+    if existing_class:
+        if arg not in existing_class:
+            attrs['class'] = f"{existing_class} {arg}"
+    else:
+        attrs['class'] = arg
+    return value.as_widget(attrs=attrs)
+
+@register.filter
+def subtract(value, arg):
+    """Subtracts arg from value."""
+    try:
+        return int(value) - int(arg)
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter
+def percentage(value, arg):
+    """Calculates percentage: (value / arg) * 100."""
+    try:
+        return (int(value) / int(arg)) * 100
+    except (ValueError, ZeroDivisionError, TypeError):
+        return 0
+
+@register.simple_tag
+def urgency_badge(urgency):
+    """Renders a styled urgency pill based on level."""
+    try:
+        u = int(float(urgency))
+    except (ValueError, TypeError):
+        u = 0
+    
+    label = f"Priority {u}"
+    if u >= 9: label = "CRITICAL"
+    elif u >= 7: label = "HIGH"
+    
+    return mark_safe(f'<span class="urgency-pill urgency-{u} shadow-sm">{label}</span>')
+

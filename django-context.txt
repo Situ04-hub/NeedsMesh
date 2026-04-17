@@ -1,0 +1,7 @@
+Analysis complete! Output written to: digest.txt
+
+Summary:
+Directory: NeedsMesh
+Files analyzed: 47
+
+Estimated tokens: 34.0k

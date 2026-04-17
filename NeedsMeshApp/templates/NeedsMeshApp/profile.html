@@ -1,0 +1,142 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}My Impact Profile – NeedsMesh{% endblock %}
+{% block page_title %}Mission Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate fadeInUp">
+
+  <!-- Profile Card (Legacy & Stats) -->
+  <div class="col-lg-4">
+    <div class="card-glass border-0 shadow-sm text-center p-4 h-100">
+      <div class="position-relative d-inline-block mb-4">
+        <div class="avatar-circle mx-auto bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 shadow-sm" style="width: 100px; height: 100px; line-height: 100px; font-size: 2.5rem; font-weight: 800;">
+          {{ profile.full_name|default:user.username|first|upper }}
+        </div>
+        <div class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle" style="width: 20px; height: 20px;" title="Online Status"></div>
+      </div>
+      
+      <h4 class="fw-bold mb-1">{{ profile.full_name }}</h4>
+      <p class="text-muted small mb-3"><i class="bi bi-envelope-at me-2"></i>{{ user.email }}</p>
+      
+      <div class="mb-4">
+        <span class="badge rounded-pill role-badge-lg px-3 py-2 role-{{ profile.role }} shadow-sm">
+          <i class="bi bi-shield-check me-1"></i> {{ profile.get_role_display }}
+        </span>
+      </div>
+
+      <div class="p-3 bg-light bg-opacity-50 rounded-4 border border-white shadow-sm">
+        {% if profile.role == 'volunteer' %}
+          {% if profile.has_badge %}
+          <div class="badge-trophy animate bounceIn">
+            <i class="bi bi-patch-check-fill text-primary fs-1 mb-2 d-block"></i>
+            <p class="mb-0 fw-bold text-dark">Elite Community Contributor</p>
+            <div class="tiny text-muted mt-1">Badge earned after {{ profile.completed_tasks }} successful missions</div>
+          </div>
+          {% else %}
+          <div class="text-start">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="tiny fw-bold text-uppercase text-muted">Contribution Goal</span>
+              <span class="tiny fw-bold text-primary">{{ profile.completed_tasks }}/3 Missions</span>
+            </div>
+            <div class="progress rounded-pill shadow-inner" style="height: 10px; background: rgba(0,0,0,0.05);">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary {% if profile.completed_tasks == 1 %}w-33{% elif profile.completed_tasks == 2 %}w-66{% elif profile.completed_tasks >= 3 %}w-100{% else %}w-0{% endif %}" 
+                   role="progressbar"></div>
+            </div>
+            <p class="tiny text-muted mt-2 mb-0">Help resolve <span class="fw-bold">{{ 3|subtract:profile.completed_tasks }} more tasks</span> to unlock your verified status badge.</p>
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="text-start">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="tiny fw-bold text-uppercase text-muted">Organisation Staff</span>
+              <span class="tiny fw-bold text-primary">Active Member</span>
+            </div>
+            <p class="tiny text-muted mt-2 mb-0">You are providing structural support via the {{ profile.get_role_display }} role.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if profile.role == 'volunteer' and profile.resume %}
+      <div class="mt-4 pt-3 border-top">
+        <a href="{{ profile.resume.url }}" class="btn btn-white btn-sm shadow-sm border w-100 py-2 rounded-3 text-primary fw-bold" target="_blank">
+          <i class="bi bi-file-earmark-pdf me-2"></i>View Verified Credentials
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Profile Configuration Form -->
+  <div class="col-lg-8">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-4 text-primary me-3">
+          <i class="bi bi-gear-wide-connected fs-4"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0">Account Settings</h5>
+          <p class="text-muted small mb-0">Manage your identity and mission credentials.</p>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        
+        <div class="row g-4">
+          <div class="col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Full Legal Name</label>
+            {{ form.full_name|add_class:"form-control border-light shadow-sm py-2 px-3" }}
+            {% if form.full_name.errors %}<div class="text-danger tiny mt-1">{{ form.full_name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Authentication Email</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock-fill text-muted opacity-50"></i></span>
+              <input type="email" class="form-control bg-light border-start-0 ps-0" value="{{ user.email }}" disabled />
+            </div>
+            <div class="tiny text-muted mt-1">Managed via Identity Provider.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Assigned Jurisdiction</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-badge-fill text-muted opacity-50"></i></span>
+              <input type="text" class="form-control bg-light border-start-0 ps-0" value="{{ profile.get_role_display }}" disabled />
+            </div>
+            <div class="tiny text-muted mt-1">Roles are managed by organisation admins.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider"><i class="bi bi-geo-alt-fill me-1"></i>Mission Locality</label>
+            {{ form.locality|add_class:"form-select border-light shadow-sm" }}
+            {% if form.locality.errors %}<div class="text-danger tiny mt-1">{{ form.locality.errors.0 }}</div>{% endif %}
+            <div class="tiny text-muted mt-1">Your assigned locality for field surveys and missions.</div>
+          </div>
+
+          {% if profile.role == 'volunteer' %}
+          <div class="col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Experience Credentials (CV/Resume)</label>
+            <div class="p-3 border border-dashed rounded-4 bg-light bg-opacity-50">
+              {{ form.resume|add_class:"form-control form-control-sm" }}
+              <div class="tiny text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Upload a PDF or DOCX file to verify your professional background.</div>
+            </div>
+            {% if form.resume.errors %}<div class="text-danger tiny mt-1">{{ form.resume.errors.0 }}</div>{% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end mt-5 pt-4 border-top">
+          <button type="submit" class="btn btn-primary-custom px-5 py-2 shadow rounded-pill">
+            <i class="bi bi-check2-circle me-2"></i>Commit Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

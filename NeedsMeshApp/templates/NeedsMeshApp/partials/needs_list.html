@@ -1,0 +1,12 @@
+<div class="row g-4" id="needs-list-container">
+  {% for problem in problems %}
+  <div class="col-md-6 col-xl-4">
+    {% include 'NeedsMeshApp/partials/problem_card.html' %}
+  </div>
+  {% empty %}
+  <div class="col-12 text-center py-5">
+    <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+    <p class="text-muted">No needs found matching your filters.</p>
+  </div>
+  {% endfor %}
+</div>

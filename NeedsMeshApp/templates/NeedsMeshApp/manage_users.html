@@ -1,0 +1,63 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Manage Users – NeedsMesh{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="card-glass p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>All Users ({{ profiles.count }})</h5>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Current Role</th>
+          <th>Tasks Done</th>
+          <th>Badge</th>
+          <th>Change Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile in profiles %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="fw-semibold">{{ profile.full_name }}</td>
+          <td class="text-muted small">{{ profile.user.email }}</td>
+          <td>
+            <span class="role-badge role-{{ profile.role }}">{{ profile.get_role_display }}</span>
+          </td>
+          <td>{{ profile.completed_tasks }}</td>
+          <td>
+            {% if profile.has_badge %}
+            <i class="bi bi-trophy-fill text-warning" title="Champion Badge"></i>
+            {% else %}
+            <span class="text-muted">–</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" class="d-flex gap-2 align-items-center">
+              {% csrf_token %}
+              <input type="hidden" name="profile_id" value="{{ profile.pk }}" />
+              <select name="role" class="form-select form-select-sm" style="width:auto;">
+                <option value="volunteer" {% if profile.role == 'volunteer' %}selected{% endif %}>Volunteer</option>
+                <option value="field_worker" {% if profile.role == 'field_worker' %}selected{% endif %}>Field Worker</option>
+                <option value="admin" {% if profile.role == 'admin' %}selected{% endif %}>Admin</option>
+              </select>
+              <button type="submit" class="btn btn-sm btn-primary-custom">Update</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

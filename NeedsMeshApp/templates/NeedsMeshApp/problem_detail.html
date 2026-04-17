@@ -1,0 +1,384 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% load custom_filters %}
+{% block title %}Case #{{ problem.pk }} Detail – NeedsMesh{% endblock %}
+{% block page_title %}Case File: {{ problem.locality }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate fadeInUp">
+
+  <!-- Main Case File -->
+  <div class="col-lg-8">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+
+      <!-- Case Header -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div class="d-flex align-items-center gap-3">
+          <span class="status-badge status-{{ problem.status }} rounded-pill px-4 py-1 fw-bold">{{ problem.status|upper }}</span>
+          <span class="text-muted small"><strong>Ref:</strong> #NM-{{ problem.pk|stringformat:"05d" }}</span>
+        </div>
+        <div class="urgency-pill urgency-{{ problem.urgency }} shadow-sm">
+          Priority Level: {{ problem.urgency }}/10
+        </div>
+      </div>
+
+      <!-- Core Details -->
+      <div class="row mb-4">
+        <div class="col-md-7">
+          <h3 class="fw-bold text-primary mb-1">{{ problem.locality }}</h3>
+          <div class="d-flex flex-wrap gap-1 mb-3">
+            {% for cat in problem.get_category_display_list %}
+            <span class="badge bg-light text-primary border border-primary border-opacity-25 rounded-pill px-3">{{ cat }}</span>
+            {% endfor %}
+          </div>
+          <!-- Volunteer Requirement & Progress -->
+          <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i>Mission Personnel</h5>
+              {% if user.profile.role == 'admin' and problem.organisation == user.profile.organisation and problem.status in 'open,assigned' %}
+              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                data-bs-target="#volRequirementModal">
+                <i class="bi bi-pencil-square"></i> Set Target
+              </button>
+              {% endif %}
+            </div>
+
+            {% if problem.volunteers_required > 0 %}
+            <div class="mb-2 d-flex justify-content-between small">
+              <span class="text-muted">Target: {{ problem.volunteers_required }} Volunteers</span>
+              <span class="fw-bold">{{ problem.interested_volunteers.count }} Fulfilled</span>
+            </div>
+            {% with progress=problem.interested_volunteers.count|percentage:problem.volunteers_required %}
+            <div class="progress mb-3" style="height: 12px; border-radius: 6px;">
+              <div
+                class="progress-bar {% if progress >= 100 %}bg-success{% else %}bg-primary{% endif %} progress-bar-striped progress-bar-animated"
+                role="progressbar" id="personnel-progress" style=" width: {{ progress|floatformat:0 }}%;"
+                aria-valuenow="{{ progress|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100"
+                data-progress="{{ progress|floatformat:0 }}"></div>
+            </div>
+            {% if progress >= 100 %}
+            <div class="alert alert-success py-2 tiny mb-0"><i class="bi bi-check-circle-fill me-2"></i>Personnel
+              requirement fulfilled! Ready for finalisation.</div>
+            {% endif %}
+            {% endwith %}
+            {% else %}
+            <div class="text-center py-3 border rounded border-dashed text-muted small">
+              Organisation Admin has not yet set the volunteer target for this mission.
+            </div>
+            {% endif %}
+          </div>
+          <div class="fw-bold h6">{{ problem.detected_date|date:"F d, Y" }}</div>
+        </div>
+      </div>
+
+      <!-- Problem Statement Section -->
+      <div class="bg-light bg-opacity-50 rounded-4 p-4 mb-4 border border-white">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">Project Scope & Problem Statement</h6>
+        {% if show_full %}
+        <div class="lead" style="font-size: 1.1rem; line-height: 1.7;">{{ problem.problem_statement|linebreaks }}</div>
+        {% else %}
+        <div class="text-muted">{{ problem.short_statement }}...</div>
+        <div
+          class="mt-3 p-3 bg-white bg-opacity-50 rounded-3 border border-info border-opacity-25 d-flex align-items-center">
+          <i class="bi bi-shield-lock-fill text-info fs-4 me-3"></i>
+          <span class="small">Detailed project requirements and sensitive data are restricted to approved task
+            volunteers.</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Media & Documentation -->
+      {% if show_full and problem.proof_images.exists %}
+      <div class="mb-4">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">Field Documentation ({{
+          problem.proof_images.count }})</h6>
+        <div class="row g-2">
+          {% for img in problem.proof_images.all %}
+          <div class="col-4 col-md-3">
+            <a href="{{ img.image.url }}" target="_blank" class="d-block card-glass p-1 h-100 hover-zoom">
+              <img src="{{ img.image.url }}" alt="Proof" class="img-fluid rounded-3"
+                style="object-fit: cover; height: 100px; width: 100%;">
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Case Progress Log -->
+      <div class="mt-auto pt-4 border-top">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">Case History & Performance</h6>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="card-glass bg-white bg-opacity-50 border-0 p-3 h-100">
+              <div class="text-muted tiny text-uppercase mb-1">Impact Goal</div>
+              <div class="small fw-bold">{{ problem.total_need|default:"Awaiting Assessment"|truncatechars:60 }}</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-glass bg-white bg-opacity-50 border-0 p-3 h-100">
+              <div class="text-muted tiny text-uppercase mb-1">Resource Pool</div>
+              <div class="small fw-bold">{{ problem.interested_volunteers.count }} Qualified Applicants</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-glass bg-white bg-opacity-50 border-0 p-3 h-100">
+              <div class="text-muted tiny text-uppercase mb-1">Scheduled Intervention</div>
+              <div class="small fw-bold">{% if problem.final_event_date %}{{ problem.final_event_date|date:"M d @ H:i" }}{% else %}TBD{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if problem.status == 'resolved' %}
+      <div class="mt-4 pt-4 border-top">
+        <h6 class="text-uppercase small fw-bold text-success tracking-wider mb-3"><i class="bi bi-check-circle-fill me-2"></i>Mission Outcomes & Resolution</h6>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card-glass border-0 shadow-sm p-4 h-100 bg-success bg-opacity-10 border border-success border-opacity-25">
+              <h6 class="fw-bold mb-3 text-success">Intervention Impact (Before/After)</h6>
+              <div class="small">{{ problem.before_after|default:"No details provided."|linebreaks }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-glass border-0 shadow-sm p-4 h-100 bg-info bg-opacity-10 border border-info border-opacity-25">
+              <h6 class="fw-bold mb-3 text-info">Community Reaction</h6>
+              <div class="small">{{ problem.community_reaction|default:"No feedback recorded."|linebreaks }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if problem.killed_reason %}
+      <div class="alert alert-danger mt-4 border-0 shadow-sm d-flex align-items-center">
+        <i class="bi bi-x-circle-fill fs-3 me-3"></i>
+        <div>
+          <div class="fw-bold">Mission Terminated</div>
+          <div class="small">{{ problem.killed_reason }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Communications Loop (Only Visible to Admin & Primary Team & Applicants) -->
+      {% if profile.role == 'admin' and problem.organisation == user.profile.organisation or user in problem.interested_volunteers.all %}
+      <div class="mt-5 pt-4 border-top">
+        <h6 class="text-uppercase small fw-bold text-primary tracking-wider mb-4"><i
+            class="bi bi-chat-left-dots-fill me-2"></i>Mission Communications Loop</h6>
+
+        <div class="glass-card bg-light bg-opacity-25 rounded-4 p-4 border border-info border-opacity-25">
+          <div id="messages-container" class="mb-4" style="max-height: 400px; overflow-y: auto;">
+            {% for msg in problem.messages.all %}
+            {% include 'NeedsMeshApp/partials/message_item.html' %}
+            {% empty %}
+            <div class="text-center text-muted small py-4" id="empty-msg"><i
+                class="bi bi-chat-quote mb-2 fs-3 d-block"></i>No communication history. Secure line is open.</div>
+            {% endfor %}
+          </div>
+
+          <form hx-post="{% url 'post_problem_message' problem.pk %}" hx-target="#messages-container"
+            hx-swap="beforeend"
+            hx-on::after-request="this.reset(); document.getElementById('empty-msg')?.remove(); const container = document.getElementById('messages-container'); container.scrollTop = container.scrollHeight;"
+            class="d-flex align-items-end gap-2">
+            {% csrf_token %}
+            <div class="flex-grow-1">
+              <textarea name="content" class="form-control form-control-sm border-0 shadow-sm" rows="2"
+                placeholder="Send a secure message to the team..." required style="resize: none;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary-custom px-4 py-2 shadow-sm rounded-3"><i
+                class="bi bi-send-fill"></i></button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Sidebar: Strategy & Coordination -->
+  <div class="col-lg-4">
+
+    <!-- Strategy Actions -->
+    {% if profile.role == 'admin' and problem.status in 'open,assigned' %}
+    <div class="card-glass border-0 shadow-sm p-4 mb-4 bg-primary bg-opacity-10">
+      <h6 class="fw-bold mb-4 d-flex align-items-center">
+        <i class="bi bi-cpu-fill me-2 text-primary"></i>Command & Control
+      </h6>
+      <div class="d-grid gap-2">
+        {% if problem.status == 'open' %}
+        {% if user.profile.role == 'admin' and problem.organisation == user.profile.organisation %}
+        <!-- NGO Admin can set target first -->
+        {% if problem.volunteers_required == 0 %}
+        <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#volRequirementModal">
+          <i class="bi bi-people-fill me-1"></i>Set Volunteer Target
+        </button>
+        {% endif %}
+        {% endif %}
+
+        <a href="{% url 'finalise_event' problem.pk %}"
+          class="btn btn-primary-custom shadow-sm {% if problem.volunteers_required > 0 and problem.interested_volunteers.count < problem.volunteers_required %}disabled{% endif %}">
+          <i class="bi bi-check2-circle me-1"></i>Approve Team &amp; Schedule
+        </a>
+        {% endif %}
+
+        {% if problem.status in 'open,assigned' %}
+        <a href="{% url 'resolve_problem' problem.pk %}"
+          class="btn btn-light border border-secondary text-dark shadow-sm">
+          <i class="bi bi-arrow-right-circle-fill me-1"></i>Update Roadmap
+        </a>
+        {% if problem.status != 'killed' %}
+        <a href="{% url 'kill_problem' problem.pk %}" class="btn btn-link text-danger text-decoration-none mt-2 small">
+          <i class="bi bi-trash3 me-1"></i>Decommission Task
+        </a>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AI/Smart Matching -->
+    {% if suggested_volunteers and problem.status == 'open' %}
+    <div class="card-glass border-0 shadow-sm p-4 mb-4">
+      <h6 class="fw-bold mb-3 d-flex align-items-center">
+        <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Smart Match Suggestions
+      </h6>
+      <div class="volunteer-pile mt-3">
+        {% for vol in suggested_volunteers %}
+        <div class="d-flex align-items-center p-2 mb-2 rounded-3 bg-light border border-white">
+          <div
+            class="avatar-sm bg-warning text-white rounded-pill me-3 small fw-bold d-flex align-items-center justify-content-center"
+            style="width:32px; height:32px;">
+            {{ vol.profile.full_name|first }}
+          </div>
+          <div class="flex-grow-1">
+            <div class="fw-bold tiny">{{ vol.profile.full_name }}</div>
+            <div class="tiny text-muted">98% Capability Match</div>
+          </div>
+          {% if vol.profile.has_badge %}<i class="bi bi-patch-check-fill text-primary ms-auto" title="Expert"></i>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Resource Selection (Visible to relevant users) -->
+    <div class="card-glass border-0 shadow-sm p-4 mb-4">
+      <h6 class="fw-bold mb-4"><i class="bi bi-people-fill me-2 text-primary"></i>Deployment Roster</h6>
+
+      <!-- Current Team -->
+      <div class="mb-4">
+        <div class="text-muted tiny text-uppercase fw-bold mb-2">Primary Team</div>
+        {% for vol in problem.selected_volunteers.all %}
+        <div
+          class="d-flex flex-column p-2 bg-success bg-opacity-10 text-success rounded-3 mb-2 small border border-success border-opacity-25">
+          <span class="fw-bold"><i class="bi bi-check-circle-fill me-2"></i>{{ vol.profile.full_name }}</span>
+          <span class="ms-4 opacity-75 tiny"><i class="bi bi-envelope-at me-1"></i><a href="mailto:{{ vol.email }}"
+              class="text-decoration-none text-success">{{ vol.email }}</a></span>
+        </div>
+        {% empty %}
+        <div class="p-3 border border-dashed rounded-3 text-center text-muted tiny">
+          No team deployed yet.
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Interested Reserve -->
+      {% if profile.role == 'admin' or is_selected %}
+      <div class="mb-2">
+        <div class="text-muted tiny text-uppercase fw-bold mb-2">Applicants ({{ problem.interested_volunteers.count }})
+        </div>
+        {% for vol in problem.interested_volunteers.all %}
+        {% if vol not in problem.selected_volunteers.all %}
+        <div class="d-flex flex-column mb-2 p-2 bg-light rounded-2 tiny border border-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark"><i class="bi bi-person me-2"></i>{{ vol.profile.full_name }}</span>
+            {% if profile.role == 'admin' and problem.organisation == user.profile.organisation %}
+            <div class="btn-group">
+                <form action="{% url 'accept_volunteer' problem.pk vol.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success py-0 px-2 shadow-none" title="Accept" style="font-size: 0.75rem;"><i class="bi bi-check2"></i> Accept</button>
+                </form>
+                <form action="{% url 'reject_volunteer' problem.pk vol.pk %}" method="post" class="d-inline ms-1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 shadow-none" title="Reject" style="font-size: 0.75rem;"><i class="bi bi-x-lg"></i></button>
+                </form>
+            </div>
+            {% endif %}
+          </div>
+          <span class="text-muted ms-4 mt-1"><i class="bi bi-envelope-at me-1"></i><a href="mailto:{{ vol.email }}"
+              class="text-decoration-none text-muted">{{ vol.email }}</a></span>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Active Volunteer Engagement -->
+    {% if profile.role == 'volunteer' %}
+    <div id="volunteer-action-zone">
+      {% if is_selected %}
+      <div class="card-glass bg-success text-white border-0 p-4 text-center shadow-lg">
+        <i class="bi bi-rocket-takeoff-fill fs-1 mb-3"></i>
+        <h5 class="fw-bold">Deployment Ready</h5>
+        <p class="small opacity-75">You have been selected for this mission. Review the project scope carefully.</p>
+        {% if problem.final_event_date %}
+        <div class="bg-white bg-opacity-20 p-2 rounded-pill small fw-bold mt-3">
+          <i class="bi bi-clock-history me-1"></i> {{ problem.final_event_date|date:"D, M d @ H:i" }}
+        </div>
+        {% endif %}
+      </div>
+      {% elif problem.status == 'open' %}
+      <div class="card-glass border-primary border-dashed p-4 text-center">
+        <h6 class="fw-bold mb-3">Available Mission</h6>
+        <p class="small text-muted mb-4">Support this community by offering your unique skills. Impact assessment: High.
+        </p>
+
+        {% if user in problem.interested_volunteers.all %}
+        <div class="btn btn-success rounded-pill w-100 disabled">
+          <i class="bi bi-shield-fill-check me-2"></i>Application Submitted
+        </div>
+        {% elif problem.volunteers_required > 0 and problem.interested_volunteers.count >= problem.volunteers_required %}
+        <div class="btn btn-secondary rounded-pill w-100 disabled">
+          <i class="bi bi-x-circle-fill me-2"></i>Target Fulfilled
+        </div>
+        {% else %}
+        <button hx-post="{% url 'offer_help' problem.pk %}" hx-target="#volunteer-action-zone" hx-swap="innerHTML"
+          class="btn btn-primary-custom w-100 rounded-pill shadow">
+          <i class="bi bi-hand-thumbs-up-fill me-2"></i>Apply to Assist
+        </button>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Modal for Setting Volunteer Target -->
+<div class="modal fade" id="volRequirementModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header border-0 bg-primary bg-opacity-10">
+        <h5 class="modal-title fw-bold text-primary"><i class="bi bi-people-fill me-2"></i>Set Volunteer Target</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'set_volunteers_required' problem.pk %}">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+          <p class="small text-muted mb-4">Specify the number of field volunteers required to fulfill this mission.</p>
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-uppercase">Volunteers Required</label>
+            <input type="number" name="volunteers_required" class="form-control form-control-lg" min="1"
+              value="{{ problem.volunteers_required|default:1 }}" required>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4 pt-0">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Save Target</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

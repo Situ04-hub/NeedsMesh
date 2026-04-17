@@ -1,0 +1,64 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Community Needs Board – NeedsMesh{% endblock %}
+{% block page_title %}Community Needs Board{% endblock %}
+
+{% block content %}
+
+<!-- Filter Bar -->
+<div class="card-glass p-3 mb-4 shadow-sm border-0">
+  <form method="get" 
+        hx-get="{% url 'needs_board' %}" 
+        hx-target="#needs-list-container" 
+        hx-trigger="change, keyup delay:500ms"
+        class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small fw-bold text-muted">Locality</label>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt"></i></span>
+        <select name="locality" class="form-select border-start-0 ps-0">
+          <option value="">All Localities</option>
+          {% for loc in localities %}
+          <option value="{{ loc.name }}" {% if loc.name == locality_filter %}selected{% endif %}>{{ loc.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <label class="form-label small fw-bold text-muted">Category</label>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-tag"></i></span>
+        <select name="category" class="form-select border-start-0 ps-0">
+          <option value="">All Categories</option>
+          {% for val, label in category_choices %}
+          <option value="{{ val }}" {% if val == category_filter %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="col-md-2">
+      <label class="form-label small fw-bold text-muted">Min Urgency</label>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-fire"></i></span>
+        <select name="urgency" class="form-select border-start-0 ps-0">
+          <option value="">Any</option>
+          <option value="5" {% if urgency_filter == "5" %}selected{% endif %}>5+</option>
+          <option value="7" {% if urgency_filter == "7" %}selected{% endif %}>7+</option>
+          <option value="9" {% if urgency_filter == "9" %}selected{% endif %}>Critical (9+)</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="col-md-2 d-flex gap-2">
+      <a href="{% url 'needs_board' %}" class="btn btn-light btn-sm flex-fill border">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Needs List Container -->
+{% include 'NeedsMeshApp/partials/needs_list.html' %}
+
+{% endblock %}

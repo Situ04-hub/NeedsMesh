@@ -1,0 +1,30 @@
+<div class="card-glass h-100 d-flex flex-column">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <span class="badge bg-light text-dark shadow-sm">{{ problem.get_category_display_list|join:", " }}</span>
+    <span class="urgency-pill urgency-{{ problem.urgency }}">Urgency {{ problem.urgency }}/10</span>
+  </div>
+  
+  <h6 class="fw-bold mb-2">{{ problem.short_statement }}</h6>
+  <div class="text-muted small mb-3">
+    <i class="bi bi-geo-alt-fill me-1"></i> {{ problem.locality.name }}
+  </div>
+  
+  <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+    <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+      Details
+    </a>
+    
+    {% if user.profile.role == 'volunteer' %}
+      {% if user in problem.interested_volunteers.all %}
+      <span class="text-success small fw-bold animate bounceIn"><i class="bi bi-check-circle-fill me-1"></i>Offered</span>
+      {% else %}
+      <button hx-post="{% url 'offer_help' problem.pk %}" 
+              hx-target="closest .card-glass" 
+              hx-swap="outerHTML" 
+              class="btn btn-sm btn-primary-custom rounded-pill px-3">
+        I can help
+      </button>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,156 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% load custom_filters %}
+{% block title %}Submit Survey – NeedsMesh{% endblock %}
+{% block page_title %}New Field Submission{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate fadeInUp">
+  <div class="col-lg-10">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+      
+      <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3 text-primary">
+          <i class="bi bi-clipboard-pulse fs-3"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0">Community Impact Assessment</h5>
+          <p class="text-muted small mb-0">Accurate data ensures efficient resource allocation.</p>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+          <!-- Section 1: Core Identification -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">1. Primary Identification</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Locality Area *</label>
+                {% if user_locality %}
+                <input type="hidden" name="locality" value="{{ user_locality.pk }}">
+                <div class="form-control bg-light border-primary border-opacity-10 d-flex align-items-center">
+                  <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                  <span class="fw-bold">{{ user_locality.name }}</span>
+                  <span class="badge bg-primary bg-opacity-10 text-primary ms-auto small">Auto-assigned</span>
+                </div>
+                <div class="tiny text-muted mt-1"><i class="bi bi-info-circle me-1"></i>Locality is set from your profile. Change it in <a href="{% url 'profile' %}" class="text-primary fw-bold">Profile Settings</a>.</div>
+                {% else %}
+                {{ survey_form.locality|add_class:"form-select border-primary border-opacity-10" }}
+                <div class="tiny text-warning mt-1"><i class="bi bi-exclamation-triangle me-1"></i>No locality assigned. Please update your <a href="{% url 'profile' %}" class="text-primary fw-bold">Profile</a>.</div>
+                {% endif %}
+                {% if survey_form.locality.errors %}<div class="text-danger tiny mt-1">{{ survey_form.locality.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Initial Detection Date *</label>
+                {{ survey_form.detected_date|add_class:"form-control border-primary border-opacity-10" }}
+                {% if survey_form.detected_date.errors %}<div class="text-danger tiny mt-1">{{ survey_form.detected_date.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Complexity & Categorization -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">2. Needs & Categorization</h6>
+            <label class="form-label small fw-bold mb-3">Service Categories (Select applicable) *</label>
+            <div class="row row-cols-2 row-cols-md-4 g-2">
+              {% for val, label in category_choices %}
+              <div class="col">
+                <input type="checkbox" class="btn-check" name="categories" value="{{ val }}" id="cat_{{ val }}" autocomplete="off">
+                <label class="category-pill-label w-100" for="cat_{{ val }}">
+                  <i class="bi bi-check-circle-fill"></i> {{ label }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            {% if survey_form.categories.errors %}<div class="text-danger tiny mt-3">Selection required.</div>{% endif %}
+          </div>
+
+          <!-- Section 3: Priority & Impact -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">3. Priority Assessment</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Urgency Index (1-10) *</label>
+                <div class="d-flex align-items-center gap-3">
+                  <span class="tiny fw-bold text-success">Low</span>
+                  {{ survey_form.urgency|add_class:"form-range flex-grow-1" }}
+                  <span class="tiny fw-bold text-danger">Critical</span>
+                </div>
+                {% if survey_form.urgency.errors %}<div class="text-danger tiny mt-1">{{ survey_form.urgency.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Qualitative Data -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">4. Qualitative Analysis</h6>
+            <label class="form-label small fw-bold">Comprehensive Problem Statement *</label>
+            {{ survey_form.problem_statement|add_class:"form-control border-primary border-opacity-10" }}
+            {% if survey_form.problem_statement.errors %}<div class="text-danger tiny mt-1">{{ survey_form.problem_statement.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- Section 5: Evidence -->
+          <div class="col-12">
+            <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-3">5. Photographic Evidence</h6>
+            <div class="p-4 border border-dashed border-primary border-opacity-25 rounded-4 bg-light bg-opacity-50 text-center">
+              <i class="bi bi-cloud-arrow-up fs-2 text-primary opacity-50 mb-2 p-3"></i>
+              <div class="small fw-bold mb-1">Upload Field Evidence</div>
+              <p class="tiny text-muted mb-3">Select multiple JPG or PNG files for review.</p>
+              <input type="file" name="images" class="form-control form-control-sm mx-auto" style="max-width: 300px;" multiple accept="image/*" />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="d-flex justify-content-end mt-5 pt-4 border-top gap-2">
+          <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4 text-muted">Discard</a>
+          <button type="submit" class="btn btn-primary-custom rounded-pill px-5 shadow">
+            <i class="bi bi-shield-check me-2"></i>Authenticate & Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Category selection pills */
+  .category-pill-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #475569;
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+  .category-pill-label:hover {
+    border-color: var(--primary-color, #1a73e8);
+    background: #eff6ff;
+    color: var(--primary-color, #1a73e8);
+  }
+  .category-pill-label i {
+    font-size: 1rem;
+    opacity: 0.4;
+    transition: opacity 0.18s;
+  }
+  /* SELECTED STATE — highlight, don't hide */
+  .btn-check:checked + .category-pill-label {
+    background: var(--primary-color, #1a73e8) !important;
+    border-color: var(--primary-color, #1a73e8) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(26,115,232,.3);
+  }
+  .btn-check:checked + .category-pill-label i {
+    opacity: 1 !important;
+  }
+</style>
+{% endblock %}

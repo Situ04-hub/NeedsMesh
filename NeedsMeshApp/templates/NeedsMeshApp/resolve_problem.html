@@ -1,0 +1,51 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Resolve Problem – NeedsMesh{% endblock %}
+{% block page_title %}Resolve Problem{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+<div class="card-glass p-4">
+  <h5 class="fw-bold mb-1"><i class="bi bi-patch-check me-2"></i>Resolve Problem</h5>
+  <p class="text-muted small mb-4">{{ problem.locality }} · Urgency {{ problem.urgency }}/10</p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Outcome Status *</label>
+      <select name="status" class="form-select">
+        <option value="resolved">✅ Resolved</option>
+        <option value="killed">❌ Killed</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Before / After Description</label>
+      <textarea name="before_after" class="form-control" rows="3"
+        placeholder="Describe the situation before and after the intervention...">{{ problem.before_after }}</textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Total Community Need Summary</label>
+      <textarea name="total_need" class="form-control" rows="2"
+        placeholder="Overall need assessment for the community...">{{ problem.total_need }}</textarea>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Community Reaction</label>
+      <textarea name="community_reaction" class="form-control" rows="2"
+        placeholder="How did the community respond? (emojis welcome 🎉🙏❤️)">{{ problem.community_reaction }}</textarea>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-success px-4">
+        <i class="bi bi-check-circle me-1"></i>Save Resolution
+      </button>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+{% endblock %}

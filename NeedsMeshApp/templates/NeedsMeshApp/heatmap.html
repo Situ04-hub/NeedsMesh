@@ -1,0 +1,140 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% load custom_filters %}
+{% block title %}Urgency Heatmap – NeedsMesh{% endblock %}
+{% block page_title %}High-Priority Heatmap{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  #heatmap { height: 600px; border-radius: 20px; z-index: 1; border: 1px solid rgba(255,255,255,0.3); }
+  .leaflet-container { background: #f8faff; font-family: 'Inter', sans-serif; }
+  .legend { 
+    padding: 15px; 
+    background: rgba(255,255,255,0.85); 
+    backdrop-filter: blur(10px);
+    border-radius: 12px; 
+    font-size: 0.75rem; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid white;
+  }
+  .legend-title { font-weight: 800; text-transform: uppercase; margin-bottom: 10px; color: #444; letter-spacing: 0.5px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-weight: 600; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate fadeInUp">
+  <div class="col-lg-9">
+    <div class="card-glass border-0 shadow-sm p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-geo-fill me-2"></i>Live Resource Allocation Map</h5>
+        <div class="small text-muted"><i class="bi bi-dot text-success pulse"></i> Real-time Distribution</div>
+      </div>
+      
+      <div id="heatmap" class="shadow-sm"></div>
+
+      {% if not heatmap_data_json or heatmap_data_json == '[]' %}
+      <div class="alert alert-info mt-4 border-0 bg-light shadow-sm d-flex align-items-center">
+        <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
+        <div>
+          <div class="fw-bold">No Spatial Data Available</div>
+          <div class="small">Assign coordinates to your localities in the <a href="{% url 'manage_localities' %}" class="fw-bold">Locality Manager</a> to activate the heatmap.</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="card-glass border-0 shadow-sm p-4 h-100">
+      <h6 class="fw-bold mb-4 small text-uppercase tracking-wider">Locality Pulse</h6>
+      <div class="locality-scroll" style="max-height: 500px; overflow-y: auto;">
+      {% for loc in localities %}
+      <div class="d-flex justify-content-between align-items-center p-3 mb-2 rounded-4 bg-white bg-opacity-50 border border-white shadow-sm transition hover-bg-light">
+        <div>
+          <div class="fw-bold small">{{ loc.name }}</div>
+          <div class="tiny text-muted">{{ loc.problems_count }} mission{{ loc.problems_count|pluralize }}</div>
+        </div>
+        {% urgency_badge loc.average_urgency %}
+      </div>
+      {% empty %}
+      <p class="text-muted small text-center py-5">No jurisdictional data.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const heatmapData = JSON.parse('{{ heatmap_data_json|escapejs|default:"[]" }}');
+
+// Standard map setup
+const map = L.map('heatmap', {
+    scrollWheelZoom: false
+}).setView([20.5937, 78.9629], 5);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; NeedsMesh OpenData',
+  maxZoom: 18,
+}).addTo(map);
+
+function urgencyColor(u) {
+  if (u >= 9) return '#dc3545'; // Danger Red
+  if (u >= 7) return '#fd7e14'; // Orange
+  if (u >= 5) return '#ffc107'; // Warning Yellow
+  return '#198754'; // Success Green
+}
+
+function urgencyRadius(u) {
+  return 10 + (u * 3);
+}
+
+const bounds = [];
+
+heatmapData.forEach(function(d) {
+  const color = urgencyColor(d.urgency);
+  const pos = [d.lat, d.lng];
+  bounds.push(pos);
+  
+  const circle = L.circleMarker(pos, {
+    radius: urgencyRadius(d.urgency),
+    fillColor: color,
+    color: 'white',
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.7,
+  }).addTo(map);
+
+  circle.bindPopup(`
+    <div class="p-1">
+      <div class="fw-bold border-bottom pb-1 mb-1">${d.name}</div>
+      <div class="small">Impact Score: <span class="fw-bold" style="color:${color}">${d.urgency}/10</span></div>
+    </div>
+  `);
+});
+
+if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [50, 50] });
+}
+
+// Legend
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = function() {
+  const div = L.DomUtil.create('div', 'legend');
+  div.innerHTML = `
+    <div class="legend-title">Impact Intensity</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#dc3545"></span>Critical (9+)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#fd7e14"></span>High Exposure (7–8)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ffc107"></span>Informed Review (5–6)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#198754"></span>Under Monitoring (1–4)</div>
+  `;
+  return div;
+};
+legend.addTo(map);
+</script>
+{% endblock %}

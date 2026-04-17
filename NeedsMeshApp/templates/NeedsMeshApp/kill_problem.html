@@ -1,0 +1,34 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% block title %}Kill Task – NeedsMesh{% endblock %}
+{% block page_title %}Kill Task{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-6">
+<div class="card-glass p-4 border-danger-soft">
+  <h5 class="fw-bold text-danger mb-1"><i class="bi bi-x-octagon me-2"></i>Kill Task</h5>
+  <p class="text-muted small mb-4">{{ problem.locality }} · {{ problem.short_statement }}</p>
+
+  <div class="alert alert-warning py-2 mb-4">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    Killing a task is permanent. This will notify any interested volunteers.
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Reason for Killing *</label>
+      <textarea name="killed_reason" class="form-control" rows="4"
+        placeholder="Explain why this task is being cancelled..." required></textarea>
+    </div>
+    <div class="d-flex gap-2 justify-content-end">
+      <a href="{% url 'problem_detail' problem.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-danger px-4">
+        <i class="bi bi-x-octagon me-1"></i>Confirm Kill
+      </button>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+{% endblock %}

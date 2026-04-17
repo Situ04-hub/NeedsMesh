@@ -1,0 +1,46 @@
+{% extends 'NeedsMeshApp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Sign In – NeedsMesh{% endblock %}
+
+{% block content_auth %}
+<div class="auth-card animate fadeIn">
+  <div class="auth-logo mb-4">
+    <img src="{% static 'NeedsMeshApp/img/logo.png' %}" alt="Logo" height="80" class="mb-3 animate bounceIn">
+    <h2 class="fw-bold text-primary">Welcome</h2>
+    <p class="text-muted small">Collaborative Resource Coordination</p>
+  </div>
+
+  <form method="post" novalidate class="mt-4">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="form-label small fw-bold text-muted text-uppercase">Identity or Username</label>
+      <div class="input-group mb-3 border rounded-3 p-1 bg-white shadow-sm transition-focus">
+        <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-person-circle"></i></span>
+        <input type="text" name="username" class="form-control border-0 bg-transparent"
+          placeholder="Enter your username" required>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <label class="form-label small fw-bold text-muted">SECURE PASSWORD</label>
+        <a href="{% url 'forgot_password' %}" class="tiny text-primary text-decoration-none fw-bold">Forgot?</a>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock text-primary"></i></span>
+        <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary-custom w-100 py-3 shadow-sm">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Access Platform
+    </button>
+  </form>
+
+  <div class="text-center mt-4">
+    <p class="text-muted small">New to the community? <a href="{% url 'register' %}"
+        class="text-primary fw-bold text-decoration-none">Create Account</a></p>
+  </div>
+</div>
+{% endblock %}
