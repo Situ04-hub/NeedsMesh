@@ -10,7 +10,7 @@ services:
     env: python
     plan: free
     buildCommand: "./build.sh"
-    startCommand: "gunicorn NeedsMesh.wsgi:application"
+    startCommand: "bash ./start.sh"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
